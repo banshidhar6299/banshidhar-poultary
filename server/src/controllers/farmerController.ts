@@ -7,7 +7,9 @@ import { ChickBatch } from '../models/ChickBatch';
 import { Conversation } from '../models/Conversation';
 import { AuditLog } from '../models/AuditLog';
 import { AuthenticatedRequest } from '../types';
-import { generateFarmerId, generateTemporaryPassword } from '../utils/helpers';
+import { generateTemporaryPassword } from '../utils/helpers';
+import { generateFarmerSequenceId } from '../utils/sequence';
+import { logger } from '../utils/logger';
 
 // Helper to compute live balance for a farmer
 export const getFarmerBalanceSummary = async (farmerId: string) => {
@@ -143,9 +145,30 @@ export const createFarmer = async (req: AuthenticatedRequest, res: Response): Pr
       return;
     }
 
-    // Auto-generate Farmer ID
-    const count = await Farmer.countDocuments();
-    const farmerId = generateFarmerId(1001 + count);
+    const cleanPhone = phone.trim();
+    const existingFarmer = await Farmer.findOne({ phone: cleanPhone });
+    if (existingFarmer) {
+      res.status(400).json({
+        success: false,
+        message: `Farmer with mobile number ${cleanPhone} already exists (Farmer ID: ${existingFarmer.farmerId}, Name: ${existingFarmer.name}).`
+      });
+      return;
+    }
+
+    const cleanEmail = email && typeof email === 'string' && email.trim().length > 0 ? email.trim().toLowerCase() : undefined;
+    if (cleanEmail) {
+      const existingEmail = await Farmer.findOne({ email: cleanEmail });
+      if (existingEmail) {
+        res.status(400).json({
+          success: false,
+          message: `Farmer with email ${cleanEmail} already exists (Farmer ID: ${existingEmail.farmerId}).`
+        });
+        return;
+      }
+    }
+
+    // Auto-generate collision-safe Farmer ID
+    const farmerId = await generateFarmerSequenceId();
     const tempPassword = password && password.trim().length >= 4 ? password.trim() : generateTemporaryPassword(8);
 
     const salt = await bcrypt.genSalt(10);
@@ -157,16 +180,16 @@ export const createFarmer = async (req: AuthenticatedRequest, res: Response): Pr
       passwordHash,
       mustChangePassword: !password, // If admin sets custom password, farmer doesn't necessarily need to change it
       name: name.trim(),
-      phone: phone.trim(),
-      email: email ? email.trim().toLowerCase() : undefined,
-      farmName: farmName ? farmName.trim() : undefined,
+      phone: cleanPhone,
+      email: cleanEmail,
+      farmName: farmName && farmName.trim() ? farmName.trim() : undefined,
       address: address.trim(),
       village: village.trim(),
       district: district.trim(),
-      state: state.trim(),
+      state: state ? state.trim() : 'Bihar',
       pinCode: pinCode.trim(),
       farmCapacity: Number(farmCapacity) || 1000,
-      notes,
+      notes: notes && notes.trim() ? notes.trim() : undefined,
       status: 'ACTIVE'
     });
 
@@ -202,7 +225,13 @@ export const createFarmer = async (req: AuthenticatedRequest, res: Response): Pr
       }
     });
   } catch (error: any) {
-    res.status(500).json({ success: false, message: "An internal error occurred." });
+    if (error.code === 11000) {
+      const field = Object.keys(error.keyPattern || {})[0] || 'field';
+      res.status(400).json({ success: false, message: `Farmer with this ${field} already exists.` });
+      return;
+    }
+    logger.error('Farmer', 'Create farmer error', error);
+    res.status(500).json({ success: false, message: 'Failed to create farmer. Please try again.' });
   }
 };
 
