@@ -8,10 +8,12 @@ import {
   Bot,
   User,
   AlertTriangle,
-  ChevronDown
+  ChevronDown,
+  LogIn
 } from 'lucide-react';
 import { api } from '../api/client';
 import { useLanguage } from '../context/LanguageContext';
+import { useAuth } from '../context/AuthContext';
 import { ChickLogo } from './ChickLogo';
 
 interface ChatMessage {
@@ -22,6 +24,7 @@ interface ChatMessage {
 
 export const AIFloatingButton: React.FC = () => {
   const { t, isHindi } = useLanguage();
+  const { isAuthenticated } = useAuth();
 
   const [isEnabled, setIsEnabled] = useState<boolean>(true);
   const [isOpen, setIsOpen] = useState<boolean>(false);
@@ -150,20 +153,31 @@ export const AIFloatingButton: React.FC = () => {
 
   if (!isEnabled) return null;
 
+  // If not authenticated, show login prompt instead of full AI chat
+  const handleUnauthenticatedClick = () => {
+    window.location.href = '/farmer/login';
+  };
+
   return (
     <>
       {/* Floating Action Button */}
       {!isOpen && (
         <button
-          onClick={() => setIsOpen(true)}
+          onClick={() => isAuthenticated ? setIsOpen(true) : handleUnauthenticatedClick()}
           className="fixed bottom-20 sm:bottom-6 right-4 sm:right-6 z-40 flex items-center gap-2 px-4 py-3 rounded-full bg-gradient-to-r from-brand-600 to-indigo-600 text-white font-bold text-xs sm:text-sm shadow-2xl shadow-brand-600/40 hover:shadow-brand-600/60 active:scale-95 transition-all group"
-          title="Poultry AI Doctor / कुक्कुट मित्र"
+          title={isAuthenticated ? (isHindi ? 'कुक्कुट मित्र AI' : 'Poultry AI Doctor') : (isHindi ? 'AI उपयोग के लिए लॉगिन करें' : 'Login to use AI')}
         >
           <div className="relative">
-            <Sparkles className="w-5 h-5 animate-spin" style={{ animationDuration: '8s' }} />
+            {isAuthenticated ? (
+              <Sparkles className="w-5 h-5 animate-spin" style={{ animationDuration: '8s' }} />
+            ) : (
+              <LogIn className="w-5 h-5" />
+            )}
           </div>
           <span className="font-display tracking-tight">
-            {isHindi ? 'कुक्कुट मित्र AI' : 'Poultry AI Doctor'}
+            {isAuthenticated
+              ? (isHindi ? 'कुक्कुट मित्र AI' : 'Poultry AI Doctor')
+              : (isHindi ? 'AI लॉगिन' : 'Login for AI')}
           </span>
         </button>
       )}

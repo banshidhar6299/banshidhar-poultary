@@ -8,13 +8,8 @@ import { AuditLog } from '../models/AuditLog';
 import { AuthenticatedRequest, OrderStatus } from '../types';
 import { emitNotification, emitOrderUpdate } from '../services/socketService';
 import { sendPushToUser, sendPushToRole } from '../services/pushService';
-
-// Helper to generate unique Order ID e.g. ORD-2026-0001
-const generateOrderId = async (): Promise<string> => {
-  const count = await Order.countDocuments();
-  const year = new Date().getFullYear();
-  return `ORD-${year}-${String(count + 1).padStart(4, '0')}`;
-};
+import { generateOrderId } from '../utils/sequence';
+import { logger } from '../utils/logger';
 
 // Farmer / Admin: Create Order
 export const createOrder = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
@@ -158,7 +153,8 @@ export const createOrder = async (req: AuthenticatedRequest, res: Response): Pro
       data: order
     });
   } catch (error: any) {
-    res.status(500).json({ success: false, message: error.message });
+    logger.error("Order", "Request error", error);
+    res.status(500).json({ success: false, message: "An internal error occurred." });
   }
 };
 
@@ -204,7 +200,8 @@ export const getOrders = async (req: AuthenticatedRequest, res: Response): Promi
       }
     });
   } catch (error: any) {
-    res.status(500).json({ success: false, message: error.message });
+    logger.error("Order", "Request error", error);
+    res.status(500).json({ success: false, message: "An internal error occurred." });
   }
 };
 
@@ -227,7 +224,8 @@ export const getOrderById = async (req: AuthenticatedRequest, res: Response): Pr
 
     res.json({ success: true, data: order });
   } catch (error: any) {
-    res.status(500).json({ success: false, message: error.message });
+    logger.error("Order", "Request error", error);
+    res.status(500).json({ success: false, message: "An internal error occurred." });
   }
 };
 
@@ -335,6 +333,7 @@ export const updateOrderStatus = async (req: AuthenticatedRequest, res: Response
 
     res.json({ success: true, message: `Order marked as ${status}`, data: order });
   } catch (error: any) {
-    res.status(500).json({ success: false, message: error.message });
+    logger.error("Order", "Request error", error);
+    res.status(500).json({ success: false, message: "An internal error occurred." });
   }
 };

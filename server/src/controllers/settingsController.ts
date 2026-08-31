@@ -52,7 +52,7 @@ export const getWebsiteSettings = async (_req: Request, res: Response): Promise<
     }
     res.json({ success: true, data: settings });
   } catch (error: any) {
-    res.status(500).json({ success: false, message: error.message });
+    res.status(500).json({ success: false, message: "An internal error occurred." });
   }
 };
 
@@ -102,7 +102,7 @@ export const updateWebsiteSettings = async (req: AuthenticatedRequest, res: Resp
 
     res.json({ success: true, message: 'Website settings updated successfully', data: settings });
   } catch (error: any) {
-    res.status(500).json({ success: false, message: error.message });
+    res.status(500).json({ success: false, message: "An internal error occurred." });
   }
 };
 
@@ -115,7 +115,7 @@ export const getAISettings = async (_req: AuthenticatedRequest, res: Response): 
     }
     res.json({ success: true, data: settings });
   } catch (error: any) {
-    res.status(500).json({ success: false, message: error.message });
+    res.status(500).json({ success: false, message: "An internal error occurred." });
   }
 };
 
@@ -142,7 +142,7 @@ export const updateAISettings = async (req: AuthenticatedRequest, res: Response)
 
     res.json({ success: true, message: 'AI settings updated successfully', data: settings });
   } catch (error: any) {
-    res.status(500).json({ success: false, message: error.message });
+    res.status(500).json({ success: false, message: "An internal error occurred." });
   }
 };
 
@@ -218,6 +218,6 @@ export const getDashboardStats = async (_req: AuthenticatedRequest, res: Respons
       }
     });
   } catch (error: any) {
-    res.status(500).json({ success: false, message: error.message });
+    res.status(500).json({ success: false, message: "An internal error occurred." });
   }
 };

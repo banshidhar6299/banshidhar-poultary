@@ -7,6 +7,7 @@ import { AuditLog } from '../models/AuditLog';
 import { AuthenticatedRequest } from '../types';
 import { createJWT, generateRandomToken, hashToken } from '../utils/helpers';
 import { sendPasswordResetEmail } from '../services/emailService';
+import { logger } from '../utils/logger';
 
 // In-Memory Brute-Force Rate Limiter & Lockout Tracker (Max 10 attempts -> 15 min lock)
 interface LoginAttempt {
@@ -152,7 +153,8 @@ export const adminLogin = async (req: Request, res: Response): Promise<void> => 
       }
     });
   } catch (error: any) {
-    res.status(500).json({ success: false, message: error.message });
+    logger.error('Auth', 'Admin login error', error);
+    res.status(500).json({ success: false, message: 'An internal error occurred. Please try again.' });
   }
 };
 
@@ -284,7 +286,8 @@ export const farmerLogin = async (req: Request, res: Response): Promise<void> =>
       }
     });
   } catch (error: any) {
-    res.status(500).json({ success: false, message: error.message });
+    logger.error('Auth', 'Farmer login error', error);
+    res.status(500).json({ success: false, message: 'An internal error occurred. Please try again.' });
   }
 };
 
@@ -339,16 +342,24 @@ export const forgotPassword = async (req: Request, res: Response): Promise<void>
     const clientUrl = process.env.CLIENT_URL || 'http://localhost:5173';
     const resetUrl = `${clientUrl}/reset-password?token=${rawToken}&role=${role}`;
 
-    await sendPasswordResetEmail(cleanEmail, user.name, resetUrl);
+    const emailSent = await sendPasswordResetEmail(cleanEmail, user.name, resetUrl);
+
+    if (!emailSent && process.env.NODE_ENV === 'production') {
+      logger.error('Auth', 'Password reset email delivery failed in production');
+      res.status(500).json({
+        success: false,
+        message: 'Unable to send password reset email. Please try again later or contact support.'
+      });
+      return;
+    }
 
     res.json({
       success: true,
-      message: 'Password reset link has been sent to your email (Valid for 15 minutes).',
-      // In dev mode, return link for rapid testing
-      ...(process.env.NODE_ENV === 'development' ? { devResetUrl: resetUrl } : {})
+      message: 'Password reset link has been sent to your email (Valid for 15 minutes).'
     });
   } catch (error: any) {
-    res.status(500).json({ success: false, message: error.message });
+    logger.error('Auth', 'Forgot password error', error);
+    res.status(500).json({ success: false, message: 'An internal error occurred. Please try again.' });
   }
 };
 
@@ -362,8 +373,8 @@ export const resetPassword = async (req: Request, res: Response): Promise<void> 
       return;
     }
 
-    if (newPassword.length < 6) {
-      res.status(400).json({ success: false, message: 'Password must be at least 6 characters long.' });
+    if (newPassword.length < 8) {
+      res.status(400).json({ success: false, message: 'Password must be at least 8 characters long.' });
       return;
     }
 
@@ -394,12 +405,19 @@ export const resetPassword = async (req: Request, res: Response): Promise<void> 
     resetRecord.isUsed = true;
     await resetRecord.save();
 
+    // Invalidate all other reset tokens for this user
+    await PasswordResetToken.updateMany(
+      { userId: resetRecord.userId, _id: { $ne: resetRecord._id }, isUsed: false },
+      { isUsed: true }
+    );
+
     res.json({
       success: true,
       message: 'Your password has been successfully reset. Please log in with your new password.'
     });
   } catch (error: any) {
-    res.status(500).json({ success: false, message: error.message });
+    logger.error('Auth', 'Reset password error', error);
+    res.status(500).json({ success: false, message: 'An internal error occurred. Please try again.' });
   }
 };
 
@@ -414,8 +432,8 @@ export const changePassword = async (req: AuthenticatedRequest, res: Response): 
       return;
     }
 
-    if (newPassword.length < 6) {
-      res.status(400).json({ success: false, message: 'New password must be at least 6 characters.' });
+    if (newPassword.length < 8) {
+      res.status(400).json({ success: false, message: 'New password must be at least 8 characters.' });
       return;
     }
 
@@ -438,7 +456,8 @@ export const changePassword = async (req: AuthenticatedRequest, res: Response): 
 
     res.json({ success: true, message: 'Password updated successfully.' });
   } catch (error: any) {
-    res.status(500).json({ success: false, message: error.message });
+    logger.error('Auth', 'Change password error', error);
+    res.status(500).json({ success: false, message: 'An internal error occurred. Please try again.' });
   }
 };
 
@@ -481,7 +500,8 @@ export const updateProfile = async (req: AuthenticatedRequest, res: Response): P
       return;
     }
   } catch (error: any) {
-    res.status(500).json({ success: false, message: error.message });
+    logger.error('Auth', 'Update profile error', error);
+    res.status(500).json({ success: false, message: 'An internal error occurred. Please try again.' });
   }
 };
 
@@ -503,6 +523,7 @@ export const getMe = async (req: AuthenticatedRequest, res: Response): Promise<v
     const farmer = await Farmer.findById(user.userId).select('-passwordHash');
     res.json({ success: true, user: farmer, role: 'FARMER' });
   } catch (error: any) {
-    res.status(500).json({ success: false, message: error.message });
+    logger.error('Auth', 'Get profile error', error);
+    res.status(500).json({ success: false, message: 'An internal error occurred. Please try again.' });
   }
 };

@@ -8,6 +8,7 @@ import { AuditLog } from '../models/AuditLog';
 import { AuthenticatedRequest } from '../types';
 import { emitNotification, emitLedgerUpdate } from '../services/socketService';
 import { getFarmerBalanceSummary } from './farmerController';
+import { generateBatchNumber } from '../utils/sequence';
 
 // Get Batches (Admin gets all/farmer-specific, Farmer gets own)
 export const getBatches = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
@@ -29,7 +30,7 @@ export const getBatches = async (req: AuthenticatedRequest, res: Response): Prom
     const batches = await ChickBatch.find(filter).sort({ startDate: -1 });
     res.json({ success: true, data: batches });
   } catch (error: any) {
-    res.status(500).json({ success: false, message: error.message });
+    res.status(500).json({ success: false, message: "An internal error occurred." });
   }
 };
 
@@ -68,8 +69,7 @@ export const addChickSupply = async (req: AuthenticatedRequest, res: Response): 
     let batchNumber = '';
 
     if (createNewBatch) {
-      const batchCount = await ChickBatch.countDocuments();
-      batchNumber = `BATCH-${new Date().getFullYear()}-${String(batchCount + 1).padStart(3, '0')}`;
+      batchNumber = await generateBatchNumber();
 
       batchDoc = await ChickBatch.create({
         batchNumber,
@@ -160,7 +160,7 @@ export const addChickSupply = async (req: AuthenticatedRequest, res: Response): 
       data: { supply, batch: batchDoc }
     });
   } catch (error: any) {
-    res.status(500).json({ success: false, message: error.message });
+    res.status(500).json({ success: false, message: "An internal error occurred." });
   }
 };
 
@@ -213,6 +213,6 @@ export const submitBirdSaleInquiry = async (req: AuthenticatedRequest, res: Resp
       data: batch
     });
   } catch (error: any) {
-    res.status(500).json({ success: false, message: error.message });
+    res.status(500).json({ success: false, message: "An internal error occurred." });
   }
 };

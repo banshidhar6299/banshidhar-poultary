@@ -27,6 +27,6 @@ export const getAuditLogs = async (req: Request, res: Response): Promise<void> =
       }
     });
   } catch (error: any) {
-    res.status(500).json({ success: false, message: error.message });
+    res.status(500).json({ success: false, message: "An internal error occurred." });
   }
 };

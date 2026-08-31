@@ -82,7 +82,7 @@ export const getFarmerLedger = async (req: AuthenticatedRequest, res: Response):
       }
     });
   } catch (error: any) {
-    res.status(500).json({ success: false, message: error.message });
+    res.status(500).json({ success: false, message: "An internal error occurred." });
   }
 };
 
@@ -274,7 +274,7 @@ export const addLedgerTransaction = async (req: AuthenticatedRequest, res: Respo
       balanceSummary
     });
   } catch (error: any) {
-    res.status(500).json({ success: false, message: error.message });
+    res.status(500).json({ success: false, message: "An internal error occurred." });
   }
 };
 
@@ -327,7 +327,7 @@ export const voidTransaction = async (req: AuthenticatedRequest, res: Response):
       balanceSummary
     });
   } catch (error: any) {
-    res.status(500).json({ success: false, message: error.message });
+    res.status(500).json({ success: false, message: "An internal error occurred." });
   }
 };
 
@@ -392,7 +392,7 @@ export const downloadStatementPDF = async (req: AuthenticatedRequest, res: Respo
     res.send(pdfBuffer);
   } catch (error: any) {
     console.error('[PDF Download Error]', error);
-    res.status(500).json({ success: false, message: error.message });
+    res.status(500).json({ success: false, message: "An internal error occurred." });
   }
 };
 
@@ -497,7 +497,7 @@ export const getAdminKhatabookOverview = async (req: AuthenticatedRequest, res: 
       }
     });
   } catch (error: any) {
-    res.status(500).json({ success: false, message: error.message });
+    res.status(500).json({ success: false, message: "An internal error occurred." });
   }
 };
 
@@ -545,6 +545,6 @@ export const getAllLedgerTransactions = async (req: AuthenticatedRequest, res: R
       }
     });
   } catch (error: any) {
-    res.status(500).json({ success: false, message: error.message });
+    res.status(500).json({ success: false, message: "An internal error occurred." });
   }
 };

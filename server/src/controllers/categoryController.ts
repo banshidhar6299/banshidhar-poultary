@@ -9,7 +9,7 @@ export const getActiveCategories = async (_req: Request, res: Response): Promise
     const categories = await Category.find({ isActive: true }).sort({ displayOrder: 1, createdAt: 1 });
     res.json({ success: true, data: categories });
   } catch (error: any) {
-    res.status(500).json({ success: false, message: error.message });
+    res.status(500).json({ success: false, message: "An internal error occurred." });
   }
 };
 
@@ -19,7 +19,7 @@ export const getAllCategories = async (_req: Request, res: Response): Promise<vo
     const categories = await Category.find().sort({ displayOrder: 1, createdAt: 1 });
     res.json({ success: true, data: categories });
   } catch (error: any) {
-    res.status(500).json({ success: false, message: error.message });
+    res.status(500).json({ success: false, message: "An internal error occurred." });
   }
 };
 
@@ -53,7 +53,7 @@ export const createCategory = async (req: AuthenticatedRequest, res: Response): 
 
     res.status(201).json({ success: true, message: 'Category created successfully', data: category });
   } catch (error: any) {
-    res.status(500).json({ success: false, message: error.message });
+    res.status(500).json({ success: false, message: "An internal error occurred." });
   }
 };
 
@@ -83,7 +83,7 @@ export const updateCategory = async (req: AuthenticatedRequest, res: Response): 
 
     res.json({ success: true, message: 'Category updated successfully', data: category });
   } catch (error: any) {
-    res.status(500).json({ success: false, message: error.message });
+    res.status(500).json({ success: false, message: "An internal error occurred." });
   }
 };
 
@@ -108,6 +108,6 @@ export const deleteCategory = async (req: AuthenticatedRequest, res: Response): 
 
     res.json({ success: true, message: 'Category deleted successfully' });
   } catch (error: any) {
-    res.status(500).json({ success: false, message: error.message });
+    res.status(500).json({ success: false, message: "An internal error occurred." });
   }
 };

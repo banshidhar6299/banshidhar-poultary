@@ -86,7 +86,7 @@ export const getAllFarmers = async (req: Request, res: Response): Promise<void> 
       }
     });
   } catch (error: any) {
-    res.status(500).json({ success: false, message: error.message });
+    res.status(500).json({ success: false, message: "An internal error occurred." });
   }
 };
 
@@ -116,7 +116,7 @@ export const getFarmerById = async (req: Request, res: Response): Promise<void> 
       }
     });
   } catch (error: any) {
-    res.status(500).json({ success: false, message: error.message });
+    res.status(500).json({ success: false, message: "An internal error occurred." });
   }
 };
 
@@ -202,7 +202,7 @@ export const createFarmer = async (req: AuthenticatedRequest, res: Response): Pr
       }
     });
   } catch (error: any) {
-    res.status(500).json({ success: false, message: error.message });
+    res.status(500).json({ success: false, message: "An internal error occurred." });
   }
 };
 
@@ -234,7 +234,7 @@ export const updateFarmer = async (req: AuthenticatedRequest, res: Response): Pr
 
     res.json({ success: true, message: 'Farmer updated successfully', data: farmer });
   } catch (error: any) {
-    res.status(500).json({ success: false, message: error.message });
+    res.status(500).json({ success: false, message: "An internal error occurred." });
   }
 };
 
@@ -277,7 +277,7 @@ export const resetFarmerPassword = async (req: AuthenticatedRequest, res: Respon
       }
     });
   } catch (error: any) {
-    res.status(500).json({ success: false, message: error.message });
+    res.status(500).json({ success: false, message: "An internal error occurred." });
   }
 };
 
@@ -312,7 +312,7 @@ export const deleteFarmer = async (req: AuthenticatedRequest, res: Response): Pr
       message: `Farmer ${farmer.name} (${farmer.farmerId}) has been deleted successfully. They can no longer log in.`
     });
   } catch (error: any) {
-    res.status(500).json({ success: false, message: error.message });
+    res.status(500).json({ success: false, message: "An internal error occurred." });
   }
 };
 
@@ -338,6 +338,6 @@ export const updateOwnProfile = async (req: AuthenticatedRequest, res: Response)
 
     res.json({ success: true, message: 'Profile updated successfully', data: farmer });
   } catch (error: any) {
-    res.status(500).json({ success: false, message: error.message });
+    res.status(500).json({ success: false, message: "An internal error occurred." });
   }
 };

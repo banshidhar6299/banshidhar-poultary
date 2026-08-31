@@ -79,7 +79,7 @@ export const submitJoinRequest = async (req: Request, res: Response): Promise<vo
       data: joinRequest
     });
   } catch (error: any) {
-    res.status(500).json({ success: false, message: error.message });
+    res.status(500).json({ success: false, message: "An internal error occurred." });
   }
 };
 
@@ -124,7 +124,7 @@ export const getAllJoinRequests = async (req: Request, res: Response): Promise<v
       }
     });
   } catch (error: any) {
-    res.status(500).json({ success: false, message: error.message });
+    res.status(500).json({ success: false, message: "An internal error occurred." });
   }
 };
 
@@ -153,7 +153,7 @@ export const updateJoinRequestStatus = async (
 
     res.json({ success: true, message: 'Status updated successfully', data: request });
   } catch (error: any) {
-    res.status(500).json({ success: false, message: error.message });
+    res.status(500).json({ success: false, message: "An internal error occurred." });
   }
 };
 
@@ -235,6 +235,6 @@ export const convertToFarmer = async (
       }
     });
   } catch (error: any) {
-    res.status(500).json({ success: false, message: error.message });
+    res.status(500).json({ success: false, message: "An internal error occurred." });
   }
 };

@@ -17,6 +17,18 @@ import { WebsiteSettings } from '../models/WebsiteSettings';
 import { AISettings } from '../models/AISettings';
 
 const seed = async () => {
+  // ⚠️ PRODUCTION SAFETY GUARD
+  if (process.env.NODE_ENV === 'production') {
+    console.error('\n❌ FATAL: Cannot run seed script in production!');
+    console.error('   The seed script DESTROYS ALL DATA and creates demo accounts.');
+    console.error('   This is only for local development.\n');
+    process.exit(1);
+  }
+
+  console.warn('\n⚠️  WARNING: This seed script will DELETE ALL existing data!');
+  console.warn('⚠️  Default credentials (admin/admin123, farmer123) are for DEVELOPMENT ONLY.');
+  console.warn('⚠️  NEVER use these credentials in production.\n');
+
   const mongoURI = process.env.MONGODB_URI || 'mongodb://127.0.0.1:27017/banshidhar_poultry';
   console.log(`[Seed] Connecting to MongoDB: ${mongoURI}`);
   await mongoose.connect(mongoURI);

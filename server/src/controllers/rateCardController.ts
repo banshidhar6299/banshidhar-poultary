@@ -8,7 +8,7 @@ export const getActiveRates = async (_req: Request, res: Response): Promise<void
     const rates = await RateCard.find({ isActive: true }).sort({ displayOrder: 1, createdAt: 1 });
     res.json({ success: true, data: rates });
   } catch (error: any) {
-    res.status(500).json({ success: false, message: error.message });
+    res.status(500).json({ success: false, message: "An internal error occurred." });
   }
 };
 
@@ -18,7 +18,7 @@ export const getAllRates = async (_req: Request, res: Response): Promise<void> =
     const rates = await RateCard.find().sort({ displayOrder: 1, createdAt: 1 });
     res.json({ success: true, data: rates });
   } catch (error: any) {
-    res.status(500).json({ success: false, message: error.message });
+    res.status(500).json({ success: false, message: "An internal error occurred." });
   }
 };
 
@@ -47,7 +47,7 @@ export const createRateCard = async (req: AuthenticatedRequest, res: Response): 
 
     res.status(201).json({ success: true, message: 'Rate updated successfully', data: rateCard });
   } catch (error: any) {
-    res.status(500).json({ success: false, message: error.message });
+    res.status(500).json({ success: false, message: "An internal error occurred." });
   }
 };
 
@@ -69,7 +69,7 @@ export const updateRateCard = async (req: AuthenticatedRequest, res: Response): 
 
     res.json({ success: true, message: 'Rate updated successfully', data: rateCard });
   } catch (error: any) {
-    res.status(500).json({ success: false, message: error.message });
+    res.status(500).json({ success: false, message: "An internal error occurred." });
   }
 };
 
@@ -84,6 +84,6 @@ export const deleteRateCard = async (req: AuthenticatedRequest, res: Response): 
     }
     res.json({ success: true, message: 'Rate card deleted successfully' });
   } catch (error: any) {
-    res.status(500).json({ success: false, message: error.message });
+    res.status(500).json({ success: false, message: "An internal error occurred." });
   }
 };

@@ -7,7 +7,6 @@ import morgan from 'morgan';
 import dotenv from 'dotenv';
 import path from 'path';
 import mongoose from 'mongoose';
-import rateLimit from 'express-rate-limit';
 
 dotenv.config();
 
@@ -15,7 +14,8 @@ import { connectDB } from './config/db';
 import { initializeSocketIO } from './services/socketService';
 import apiRoutes from './routes';
 import { errorHandler } from './middlewares/errorHandler';
-import { isOriginAllowed, validateEnvironment } from './config/env';
+import { isOriginAllowed, validateEnvironment, getAllowedOrigins } from './config/env';
+import { apiLimiter, loginLimiter, passwordResetLimiter } from './middlewares/rateLimiter';
 
 validateEnvironment();
 
@@ -33,9 +33,23 @@ const io = new SocketIOServer(server, {
 initializeSocketIO(io);
 
 // Security & Parsing Middlewares
+const clientOrigins = getAllowedOrigins();
 app.use(
   helmet({
-    crossOriginResourcePolicy: { policy: 'cross-origin' }
+    crossOriginResourcePolicy: { policy: 'cross-origin' },
+    contentSecurityPolicy: {
+      directives: {
+        defaultSrc: ["'self'"],
+        scriptSrc: ["'self'", "'unsafe-inline'"],
+        styleSrc: ["'self'", "'unsafe-inline'", 'https://fonts.googleapis.com'],
+        fontSrc: ["'self'", 'https://fonts.gstatic.com'],
+        imgSrc: ["'self'", 'data:', 'blob:', 'https://res.cloudinary.com', 'https://images.unsplash.com'],
+        connectSrc: ["'self'", ...clientOrigins.filter(o => o !== '*'), 'wss:', 'ws:'],
+        mediaSrc: ["'self'", 'https://res.cloudinary.com'],
+        objectSrc: ["'none'"],
+        frameAncestors: ["'none'"]
+      }
+    }
   })
 );
 
@@ -56,9 +70,11 @@ app.use(express.json({ limit: '1mb' }));
 app.use(express.urlencoded({ extended: true, limit: '1mb' }));
 app.use(morgan(process.env.NODE_ENV === 'production' ? 'combined' : 'dev'));
 
-const apiLimiter = rateLimit({ windowMs: 15 * 60 * 1000, limit: 1000, standardHeaders: 'draft-7', legacyHeaders: false });
-const authLimiter = rateLimit({ windowMs: 15 * 60 * 1000, limit: 30, standardHeaders: 'draft-7', legacyHeaders: false });
-app.use('/api/auth', authLimiter);
+// Rate Limiters
+app.use('/api/auth/admin/login', loginLimiter);
+app.use('/api/auth/farmer/login', loginLimiter);
+app.use('/api/auth/forgot-password', passwordResetLimiter);
+app.use('/api/auth/reset-password', passwordResetLimiter);
 app.use('/api', apiLimiter);
 
 // Static Uploads Directory
@@ -95,7 +111,10 @@ connectDB().then(() => {
     console.log(`\n🐔 BANSHIDHAR POULTRY SERVER STARTED`);
     console.log(`🌐 Server URL: http://localhost:${PORT}`);
     console.log(`📡 Realtime Socket.IO: Active`);
-    console.log(`📁 Uploads dir: ${uploadsPath}\n`);
+    if (process.env.NODE_ENV !== 'production') {
+      console.log(`📁 Uploads dir: ${uploadsPath}`);
+    }
+    console.log('');
   });
 });
 

@@ -18,7 +18,7 @@ export const getActiveProducts = async (req: Request, res: Response): Promise<vo
 
     res.json({ success: true, data: products });
   } catch (error: any) {
-    res.status(500).json({ success: false, message: error.message });
+    res.status(500).json({ success: false, message: "An internal error occurred." });
   }
 };
 
@@ -55,7 +55,7 @@ export const getAllProducts = async (req: Request, res: Response): Promise<void>
       }
     });
   } catch (error: any) {
-    res.status(500).json({ success: false, message: error.message });
+    res.status(500).json({ success: false, message: "An internal error occurred." });
   }
 };
 
@@ -70,7 +70,7 @@ export const getProductById = async (req: Request, res: Response): Promise<void>
     }
     res.json({ success: true, data: product });
   } catch (error: any) {
-    res.status(500).json({ success: false, message: error.message });
+    res.status(500).json({ success: false, message: "An internal error occurred." });
   }
 };
 
@@ -135,7 +135,7 @@ export const createProduct = async (req: AuthenticatedRequest, res: Response): P
 
     res.status(201).json({ success: true, message: 'Product created successfully', data: product });
   } catch (error: any) {
-    res.status(500).json({ success: false, message: error.message });
+    res.status(500).json({ success: false, message: "An internal error occurred." });
   }
 };
 
@@ -170,7 +170,7 @@ export const updateProduct = async (req: AuthenticatedRequest, res: Response): P
 
     res.json({ success: true, message: 'Product updated successfully', data: product });
   } catch (error: any) {
-    res.status(500).json({ success: false, message: error.message });
+    res.status(500).json({ success: false, message: "An internal error occurred." });
   }
 };
 
@@ -185,6 +185,6 @@ export const deleteProduct = async (req: AuthenticatedRequest, res: Response): P
     }
     res.json({ success: true, message: 'Product deleted successfully' });
   } catch (error: any) {
-    res.status(500).json({ success: false, message: error.message });
+    res.status(500).json({ success: false, message: "An internal error occurred." });
   }
 };

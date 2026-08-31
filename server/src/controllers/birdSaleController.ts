@@ -8,13 +8,9 @@ import { AuditLog } from '../models/AuditLog';
 import { AuthenticatedRequest } from '../types';
 import { emitNotification, emitLedgerUpdate } from '../services/socketService';
 import { getFarmerBalanceSummary } from './farmerController';
+import { generateSettlementId } from '../utils/sequence';
 
-// Helper for Settlement ID e.g. STL-2026-0001
-const generateSettlementId = async (): Promise<string> => {
-  const count = await BirdSale.countDocuments();
-  const year = new Date().getFullYear();
-  return `STL-${year}-${String(count + 1).padStart(4, '0')}`;
-};
+
 
 // Admin: Create Bird Sale Settlement
 export const createBirdSaleSettlement = async (
@@ -160,7 +156,7 @@ export const createBirdSaleSettlement = async (
       data: settlement
     });
   } catch (error: any) {
-    res.status(500).json({ success: false, message: error.message });
+    res.status(500).json({ success: false, message: "An internal error occurred." });
   }
 };
 
@@ -183,6 +179,6 @@ export const getBirdSaleSettlements = async (
     const settlements = await BirdSale.find(filter).sort({ settlementDate: -1 });
     res.json({ success: true, data: settlements });
   } catch (error: any) {
-    res.status(500).json({ success: false, message: error.message });
+    res.status(500).json({ success: false, message: "An internal error occurred." });
   }
 };

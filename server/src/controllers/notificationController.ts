@@ -41,7 +41,7 @@ export const getNotifications = async (req: AuthenticatedRequest, res: Response)
       unreadCount
     });
   } catch (error: any) {
-    res.status(500).json({ success: false, message: error.message });
+    res.status(500).json({ success: false, message: "An internal error occurred." });
   }
 };
 
@@ -74,7 +74,7 @@ export const markNotificationRead = async (req: AuthenticatedRequest, res: Respo
     }
     res.json({ success: true, data: notif });
   } catch (error: any) {
-    res.status(500).json({ success: false, message: error.message });
+    res.status(500).json({ success: false, message: "An internal error occurred." });
   }
 };
 
@@ -112,6 +112,6 @@ export const savePushSubscription = async (req: AuthenticatedRequest, res: Respo
 
     res.json({ success: true, message: 'Push subscription saved successfully.' });
   } catch (error: any) {
-    res.status(500).json({ success: false, message: error.message });
+    res.status(500).json({ success: false, message: "An internal error occurred." });
   }
 };

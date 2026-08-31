@@ -16,7 +16,7 @@ export const getAdminConversations = async (_req: AuthenticatedRequest, res: Res
 
     res.json({ success: true, data: conversations });
   } catch (error: any) {
-    res.status(500).json({ success: false, message: error.message });
+    res.status(500).json({ success: false, message: "An internal error occurred." });
   }
 };
 
@@ -41,7 +41,7 @@ export const getFarmerConversation = async (req: AuthenticatedRequest, res: Resp
 
     res.json({ success: true, data: conversation });
   } catch (error: any) {
-    res.status(500).json({ success: false, message: error.message });
+    res.status(500).json({ success: false, message: "An internal error occurred." });
   }
 };
 
@@ -96,7 +96,7 @@ export const getMessages = async (req: AuthenticatedRequest, res: Response): Pro
       }
     });
   } catch (error: any) {
-    res.status(500).json({ success: false, message: error.message });
+    res.status(500).json({ success: false, message: "An internal error occurred." });
   }
 };
 
@@ -226,6 +226,6 @@ export const sendMessage = async (req: AuthenticatedRequest, res: Response): Pro
 
     res.status(201).json({ success: true, data: message });
   } catch (error: any) {
-    res.status(500).json({ success: false, message: error.message });
+    res.status(500).json({ success: false, message: "An internal error occurred." });
   }
 };

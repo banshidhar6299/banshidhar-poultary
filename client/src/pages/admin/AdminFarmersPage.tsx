@@ -348,7 +348,7 @@ export const AdminFarmersPage: React.FC = () => {
 
       {/* Edit Farmer Modal */}
       {isEditModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-sm overflow-y-auto">
+        <div className="fixed inset-0 z-50 flex items-start justify-center p-4 bg-slate-950/60 backdrop-blur-sm overflow-y-auto">
           <div className="w-full max-w-2xl bg-white dark:bg-slate-900 rounded-3xl p-6 sm:p-8 border border-slate-200 dark:border-slate-800 shadow-2xl space-y-6 my-8 animate-in zoom-in-95 duration-150">
             <div className="flex justify-between items-center border-b border-slate-100 dark:border-slate-800 pb-4">
               <div className="flex items-center gap-2">
@@ -587,7 +587,7 @@ export const AdminFarmersPage: React.FC = () => {
 
       {/* Add Farmer Modal */}
       {isAddModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-sm overflow-y-auto">
+        <div className="fixed inset-0 z-50 flex items-start justify-center p-4 bg-slate-950/60 backdrop-blur-sm overflow-y-auto">
           <div className="w-full max-w-2xl bg-white dark:bg-slate-900 rounded-3xl p-6 sm:p-8 border border-slate-200 dark:border-slate-800 shadow-2xl space-y-6 my-8 animate-in zoom-in-95 duration-150">
             <div className="flex justify-between items-center border-b border-slate-100 dark:border-slate-800 pb-4">
               <div>

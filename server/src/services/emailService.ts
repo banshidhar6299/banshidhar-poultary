@@ -1,4 +1,5 @@
 import axios from 'axios';
+import { logger } from '../utils/logger';
 
 export interface EmailOptions {
   toEmail: string;
@@ -11,13 +12,19 @@ export const sendBrevoEmail = async (options: EmailOptions): Promise<boolean> =>
   const apiKey = process.env.BREVO_API_KEY;
   const senderEmail = process.env.BREVO_SENDER_EMAIL || 'noreply@banshidharpoultry.com';
   const senderName = process.env.BREVO_SENDER_NAME || 'BANSHIDHAR POULTRY';
+  const isProduction = process.env.NODE_ENV === 'production';
 
   if (!apiKey) {
-    console.log('\n================ [EMAIL SIMULATION (BREVO_API_KEY NOT SET)] ================');
-    console.log(`To: ${options.toName} <${options.toEmail}>`);
-    console.log(`Subject: ${options.subject}`);
-    console.log(`Content:\n${options.htmlContent}`);
-    console.log('=============================================================================\n');
+    if (isProduction) {
+      // In production, never simulate — fail cleanly
+      logger.error('EmailService', 'BREVO_API_KEY not configured in production. Cannot send email.');
+      return false;
+    }
+    // Development: log metadata only (never print reset URLs or tokens)
+    logger.debug('EmailService', 'Email simulated (BREVO_API_KEY not set)', {
+      to: options.toEmail,
+      subject: options.subject
+    });
     return true;
   }
 
@@ -39,7 +46,10 @@ export const sendBrevoEmail = async (options: EmailOptions): Promise<boolean> =>
 
     return response.status === 201 || response.status === 200;
   } catch (error: any) {
-    console.error('[EmailService] Brevo sending failed:', error?.response?.data || error.message);
+    logger.error('EmailService', 'Brevo sending failed', {
+      status: error?.response?.status,
+      message: error?.response?.data?.message || error.message
+    });
     return false;
   }
 };
