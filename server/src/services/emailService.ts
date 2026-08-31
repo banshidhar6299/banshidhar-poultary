@@ -13,14 +13,11 @@ export const sendBrevoEmail = async (options: EmailOptions): Promise<boolean> =>
   const senderName = process.env.BREVO_SENDER_NAME || 'BANSHIDHAR POULTRY';
 
   if (!apiKey) {
-    if (process.env.NODE_ENV === 'production') {
-      throw new Error('Email service is not configured.');
-    }
-    console.log('\n================ [EMAIL SIMULATION (DEV MODE)] ================');
+    console.log('\n================ [EMAIL SIMULATION (BREVO_API_KEY NOT SET)] ================');
     console.log(`To: ${options.toName} <${options.toEmail}>`);
     console.log(`Subject: ${options.subject}`);
     console.log(`Content:\n${options.htmlContent}`);
-    console.log('================================================================\n');
+    console.log('=============================================================================\n');
     return true;
   }
 
