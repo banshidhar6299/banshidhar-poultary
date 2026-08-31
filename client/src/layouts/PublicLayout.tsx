@@ -6,7 +6,7 @@ import {
   Calculator,
   ShoppingBag,
   User,
-  PhoneCall,
+  LayoutDashboard,
   MessageCircle
 } from 'lucide-react';
 import { Navbar } from '../components/Navbar';
@@ -35,28 +35,16 @@ export const PublicLayout: React.FC = () => {
       .catch(() => {});
   }, []);
 
-  const publicBottomTabs = [
-    { href: '/#rates', label: isHindi ? 'आज का भाव' : 'Rates', icon: TrendingUp },
-    { href: '/#calculator', label: isHindi ? 'तौल' : 'Calculator', icon: Calculator },
-    { href: '/#products', label: isHindi ? 'उत्पाद' : 'Products', icon: ShoppingBag },
-    {
-      href: isAuthenticated ? (isAdmin ? '/admin' : '/farmer') : '/farmer/login',
-      label: isAuthenticated ? (isAdmin ? 'Dashboard' : 'Portal') : (isHindi ? 'लॉगिन' : 'Login'),
-      icon: User,
-      isPrimary: true
-    }
-  ];
-
   return (
-    <div className="min-h-screen flex flex-col bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 transition-colors pb-16 lg:pb-0">
+    <div className="min-h-screen flex flex-col bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 transition-colors pb-16 lg:pb-0 overflow-x-hidden w-full max-w-full">
       <Navbar logoUrl={settings?.logoUrl} />
-      <main className="flex-1">
+      <main className="flex-1 w-full max-w-full overflow-x-hidden">
         <Outlet context={{ settings }} />
       </main>
       <Footer settings={settings} />
 
       {/* Native App Floating Mobile Bottom Bar for Public Website */}
-      <nav className="fixed bottom-0 left-0 right-0 z-40 lg:hidden bg-white/95 dark:bg-slate-900/95 backdrop-blur-lg border-t border-slate-200/90 dark:border-slate-800/90 px-2 pt-1.5 pb-safe flex items-center justify-around shadow-[0_-4px_20px_rgba(0,0,0,0.08)] select-none">
+      <nav className="fixed bottom-0 left-0 right-0 z-40 lg:hidden bg-white/95 dark:bg-slate-900/95 backdrop-blur-lg border-t border-slate-200/90 dark:border-slate-800/90 px-1 pt-1.5 pb-safe flex items-center justify-around shadow-[0_-4px_20px_rgba(0,0,0,0.08)] select-none">
         <a
           href="/"
           className="flex-1 flex flex-col items-center justify-center py-1 rounded-2xl transition-all app-touch-active text-slate-600 dark:text-slate-300 hover:text-brand-600"
@@ -65,46 +53,43 @@ export const PublicLayout: React.FC = () => {
           <span className="text-[10px] tracking-tight mt-1 whitespace-nowrap">{isHindi ? 'होम' : 'Home'}</span>
         </a>
 
-        {publicBottomTabs.map((item) => {
-          const Icon = item.icon;
-          return item.href.startsWith('/#') ? (
-            <a
-              key={item.href}
-              href={item.href}
-              className="flex-1 flex flex-col items-center justify-center py-1 rounded-2xl transition-all app-touch-active text-slate-600 dark:text-slate-300 hover:text-brand-600"
-            >
-              <Icon className="w-5 h-5 stroke-2" />
-              <span className="text-[10px] tracking-tight mt-1 whitespace-nowrap">{item.label}</span>
-            </a>
-          ) : (
-            <Link
-              key={item.href}
-              to={item.href}
-              className={`flex-1 flex flex-col items-center justify-center py-1 rounded-2xl transition-all app-touch-active ${
-                item.isPrimary
-                  ? 'text-brand-600 dark:text-brand-400 font-extrabold'
-                  : 'text-slate-600 dark:text-slate-300'
-              }`}
-            >
-              <Icon className="w-5 h-5 stroke-[2.5px]" />
-              <span className="text-[10px] tracking-tight mt-1 whitespace-nowrap">{item.label}</span>
-            </Link>
-          );
-        })}
+        <a
+          href="/#rates"
+          className="flex-1 flex flex-col items-center justify-center py-1 rounded-2xl transition-all app-touch-active text-slate-600 dark:text-slate-300 hover:text-brand-600"
+        >
+          <TrendingUp className="w-5 h-5 stroke-2" />
+          <span className="text-[10px] tracking-tight mt-1 whitespace-nowrap">{isHindi ? 'भाव' : 'Rates'}</span>
+        </a>
 
-        {/* 1-Click WhatsApp Quick Call Button */}
-        {settings?.whatsappNumber && (
-          <a
-            href={`https://wa.me/${settings.whatsappNumber.replace(/[^0-9]/g, '')}?text=Hello%20Banshidhar%20Poultry`}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="flex-1 flex flex-col items-center justify-center py-1 rounded-2xl transition-all app-touch-active text-emerald-600 dark:text-emerald-400"
-            title="WhatsApp"
-          >
-            <MessageCircle className="w-5 h-5 stroke-2" />
-            <span className="text-[10px] tracking-tight mt-1 whitespace-nowrap">WhatsApp</span>
-          </a>
-        )}
+        <a
+          href="/#calculator"
+          className="flex-1 flex flex-col items-center justify-center py-1 rounded-2xl transition-all app-touch-active text-slate-600 dark:text-slate-300 hover:text-brand-600"
+        >
+          <Calculator className="w-5 h-5 stroke-2" />
+          <span className="text-[10px] tracking-tight mt-1 whitespace-nowrap">{isHindi ? 'तौल' : 'Calculator'}</span>
+        </a>
+
+        <a
+          href="/#products"
+          className="flex-1 flex flex-col items-center justify-center py-1 rounded-2xl transition-all app-touch-active text-slate-600 dark:text-slate-300 hover:text-brand-600"
+        >
+          <ShoppingBag className="w-5 h-5 stroke-2" />
+          <span className="text-[10px] tracking-tight mt-1 whitespace-nowrap">{isHindi ? 'उत्पाद' : 'Products'}</span>
+        </a>
+
+        <Link
+          to={isAuthenticated ? (isAdmin ? '/admin' : '/farmer') : '/farmer/login'}
+          className="flex-1 flex flex-col items-center justify-center py-1 rounded-2xl transition-all app-touch-active text-brand-600 dark:text-brand-400 font-extrabold"
+        >
+          {isAuthenticated ? (
+            <LayoutDashboard className="w-5 h-5 stroke-[2.5px]" />
+          ) : (
+            <User className="w-5 h-5 stroke-[2.5px]" />
+          )}
+          <span className="text-[10px] tracking-tight mt-1 whitespace-nowrap">
+            {isAuthenticated ? (isAdmin ? 'Admin' : 'Portal') : (isHindi ? 'लॉगिन' : 'Login')}
+          </span>
+        </Link>
       </nav>
 
       <AIFloatingButton />

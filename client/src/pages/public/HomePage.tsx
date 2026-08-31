@@ -159,31 +159,31 @@ export const HomePage: React.FC = () => {
         <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/60 to-brand-950/70" />
 
         {/* Hero Content */}
-        <div className="relative z-10 max-w-5xl mx-auto px-4 sm:px-6 py-20 text-center space-y-6">
-          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-brand-500/20 text-brand-300 text-xs sm:text-sm font-bold border border-brand-400/30 backdrop-blur-md animate-in fade-in zoom-in-95 duration-500">
-            <ShieldCheck className="w-4 h-4 text-emerald-400" />
-            <span>{t.hero.badge}</span>
+        <div className="relative z-10 max-w-5xl mx-auto px-4 sm:px-6 py-14 sm:py-20 text-center space-y-5 sm:space-y-6 w-full overflow-hidden">
+          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-brand-500/20 text-brand-300 text-xs sm:text-sm font-bold border border-brand-400/30 backdrop-blur-md animate-in fade-in zoom-in-95 duration-500">
+            <ShieldCheck className="w-4 h-4 text-emerald-400 shrink-0" />
+            <span className="truncate">{t.hero.badge}</span>
           </div>
 
-          <h1 className="text-4xl sm:text-6xl md:text-7xl font-black font-display tracking-tight text-white drop-shadow-md">
+          <h1 className="text-3xl sm:text-5xl md:text-6xl font-black font-display tracking-tight text-white drop-shadow-md break-words">
             {heroTitle}
           </h1>
 
-          <p className="text-sm sm:text-lg md:text-xl text-slate-200 max-w-3xl mx-auto leading-relaxed drop-shadow">
+          <p className="text-xs sm:text-base md:text-lg text-slate-200 max-w-3xl mx-auto leading-relaxed drop-shadow px-2">
             {heroSubtitle}
           </p>
 
-          <div className="flex flex-wrap items-center justify-center gap-3.5 pt-4">
+          <div className="flex flex-wrap items-center justify-center gap-3 pt-2">
             <a
               href="#products"
-              className="px-8 py-3.5 rounded-2xl bg-brand-600 hover:bg-brand-500 active:scale-95 text-white font-extrabold text-sm shadow-xl shadow-brand-600/30 transition-all"
+              className="px-6 py-3 sm:px-8 sm:py-3.5 rounded-2xl bg-brand-600 hover:bg-brand-500 active:scale-95 text-white font-extrabold text-xs sm:text-sm shadow-xl shadow-brand-600/30 transition-all app-touch-active"
             >
               {t.hero.viewProducts}
             </a>
 
             <a
               href="#join"
-              className="px-8 py-3.5 rounded-2xl bg-amber-500 hover:bg-amber-400 active:scale-95 text-slate-950 font-black text-sm shadow-lg shadow-amber-500/20 transition-all"
+              className="px-6 py-3 sm:px-8 sm:py-3.5 rounded-2xl bg-amber-500 hover:bg-amber-400 active:scale-95 text-slate-950 font-black text-xs sm:text-sm shadow-lg shadow-amber-500/20 transition-all app-touch-active"
             >
               {t.hero.joinUs}
             </a>
