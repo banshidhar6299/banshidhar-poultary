@@ -571,7 +571,7 @@ export const AdminFarmerDetailPage: React.FC = () => {
               </span>
             </div>
             <p className="text-xs text-slate-500 mt-0.5">
-              {farmer.phone} · {farmer.village}, {farmer.district} {farmer.farmName ? `(${farmer.farmName})` : ''}
+              {farmer.phone} {farmer.email ? `· 📧 ${farmer.email}` : ''} · {farmer.village}, {farmer.district} {farmer.farmName ? `(${farmer.farmName})` : ''}
             </p>
           </div>
         </div>
@@ -1681,6 +1681,42 @@ export const AdminFarmerDetailPage: React.FC = () => {
                   />
                 </div>
               </div>
+
+              <div>
+                <label className="block font-bold mb-1">
+                  📧 {isHindi ? 'पंजीकृत ईमेल (पासवर्ड रीसेट हेतु)' : 'Registered Email (For Password Recovery)'}
+                </label>
+                <input
+                  type="email"
+                  placeholder="farmer@gmail.com"
+                  value={editForm.email}
+                  onChange={(e) => setEditForm({ ...editForm, email: e.target.value })}
+                  className="w-full p-2 rounded-xl border bg-slate-50 dark:bg-slate-950"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block font-bold mb-1">Farm Name</label>
+                  <input
+                    type="text"
+                    placeholder="e.g. Royal Poultry Farm"
+                    value={editForm.farmName}
+                    onChange={(e) => setEditForm({ ...editForm, farmName: e.target.value })}
+                    className="w-full p-2 rounded-xl border bg-slate-50 dark:bg-slate-950"
+                  />
+                </div>
+                <div>
+                  <label className="block font-bold mb-1">Farm Capacity (Birds)</label>
+                  <input
+                    type="number"
+                    value={editForm.farmCapacity}
+                    onChange={(e) => setEditForm({ ...editForm, farmCapacity: Number(e.target.value) })}
+                    className="w-full p-2 rounded-xl border bg-slate-50 dark:bg-slate-950"
+                  />
+                </div>
+              </div>
+
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="block font-bold mb-1">Village</label>
@@ -1697,6 +1733,27 @@ export const AdminFarmerDetailPage: React.FC = () => {
                     type="text"
                     value={editForm.district}
                     onChange={(e) => setEditForm({ ...editForm, district: e.target.value })}
+                    className="w-full p-2 rounded-xl border bg-slate-50 dark:bg-slate-950"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block font-bold mb-1">Address</label>
+                  <input
+                    type="text"
+                    value={editForm.address}
+                    onChange={(e) => setEditForm({ ...editForm, address: e.target.value })}
+                    className="w-full p-2 rounded-xl border bg-slate-50 dark:bg-slate-950"
+                  />
+                </div>
+                <div>
+                  <label className="block font-bold mb-1">PIN Code</label>
+                  <input
+                    type="text"
+                    value={editForm.pinCode}
+                    onChange={(e) => setEditForm({ ...editForm, pinCode: e.target.value })}
                     className="w-full p-2 rounded-xl border bg-slate-50 dark:bg-slate-950"
                   />
                 </div>

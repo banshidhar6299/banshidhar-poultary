@@ -134,7 +134,9 @@ export const ForgotPasswordPage: React.FC = () => {
                 />
               </div>
               <span className="text-[10px] text-slate-400 mt-1 block">
-                Brevo will deliver a 1-hour secure password reset URL to this address.
+                {role === 'FARMER'
+                  ? 'आपके पंजीकृत ईमेल पर 15 मिनट तक मान्य सुरक्षित पासवर्ड रीसेट लिंक भेजा जाएगा।'
+                  : 'A secure 15-minute Brevo password reset link will be sent to this email address.'}
               </span>
             </div>
 
@@ -143,7 +145,7 @@ export const ForgotPasswordPage: React.FC = () => {
               disabled={loading}
               className="w-full py-3 rounded-2xl bg-brand-600 hover:bg-brand-700 active:scale-95 disabled:opacity-50 text-white font-extrabold text-sm shadow-xl shadow-brand-600/30 transition-all"
             >
-              {loading ? 'Sending Brevo Reset Link...' : 'Send Password Reset Link'}
+              {loading ? 'Sending Reset Link...' : 'रीसेट लिंक भेजें / Send Reset Link'}
             </button>
           </form>
         )}

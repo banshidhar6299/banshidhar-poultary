@@ -117,13 +117,17 @@ export const FarmerLayout: React.FC = () => {
               {user?.name?.charAt(0).toUpperCase() || 'F'}
             </Link>
 
-            {/* Logout (Desktop) */}
+            {/* Logout Button */}
             <button
               onClick={logout}
-              title="Logout"
-              className="hidden sm:inline-flex p-1.5 text-slate-400 hover:text-red-600 rounded-xl hover:bg-red-50 dark:hover:bg-red-950/30 transition-colors app-touch-active"
+              title={isHindi ? 'लॉगआउट करें (होमपेज पर जाएं)' : 'Logout (Go to Homepage)'}
+              aria-label="Logout"
+              className="flex items-center gap-1 p-1.5 sm:px-2.5 sm:py-1 text-slate-500 hover:text-red-600 dark:text-slate-400 dark:hover:text-red-400 rounded-xl hover:bg-red-50 dark:hover:bg-red-950/40 border border-transparent hover:border-red-200 dark:hover:border-red-900 transition-all app-touch-active"
             >
-              <LogOut className="w-4 h-4" />
+              <LogOut className="w-4 h-4 text-red-500" />
+              <span className="hidden sm:inline text-xs font-bold text-red-600 dark:text-red-400">
+                {isHindi ? 'लॉगआउट' : 'Logout'}
+              </span>
             </button>
           </div>
         </div>

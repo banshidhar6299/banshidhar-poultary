@@ -16,7 +16,6 @@ export const FarmerLoginPage: React.FC = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const [showHelp, setShowHelp] = useState(false);
   const [lockCountdown, setLockCountdown] = useState<number>(0);
 
   useEffect(() => {
@@ -147,14 +146,14 @@ export const FarmerLoginPage: React.FC = () => {
               <label className="text-xs font-bold text-slate-700 dark:text-slate-300">
                 {isHindi ? 'पासवर्ड' : 'Password'}
               </label>
-              <button
-                type="button"
-                onClick={() => setShowHelp(!showHelp)}
-                className="text-[11px] font-semibold text-brand-600 dark:text-brand-400 hover:underline inline-flex items-center gap-1"
+              <Link
+                to="/forgot-password?role=FARMER"
+                className="text-[11px] font-bold text-brand-600 dark:text-brand-400 hover:underline inline-flex items-center gap-1"
+                title={isHindi ? 'पंजीकृत ईमेल पर पासवर्ड रीसेट लिंक प्राप्त करें' : 'Reset password via registered email'}
               >
-                <HelpCircle className="w-3 h-3" />
+                <HelpCircle className="w-3.5 h-3.5" />
                 <span>{isHindi ? 'पासवर्ड भूल गए?' : 'Forgot Password?'}</span>
-              </button>
+              </Link>
             </div>
             <div className="relative">
               <Lock className="absolute left-3.5 top-3 w-4 h-4 text-slate-400" />
@@ -176,27 +175,6 @@ export const FarmerLoginPage: React.FC = () => {
               </button>
             </div>
           </div>
-
-          {showHelp && (
-            <div className="p-3.5 rounded-2xl bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-900 text-xs text-amber-900 dark:text-amber-200 space-y-2">
-              <p className="font-semibold">
-                {isHindi
-                  ? 'यदि आपके पास ईमेल पंजीकृत है, तो 15 मिनट का पासवर्ड रीसेट लिंक प्राप्त कर सकते हैं:'
-                  : 'If you have an email on file, request a 15-minute reset link:'}
-              </p>
-              <Link
-                to="/forgot-password?role=FARMER"
-                className="inline-block font-bold text-brand-700 dark:text-brand-300 underline"
-              >
-                {isHindi ? 'ईमेल द्वारा पासवर्ड रीसेट करें →' : 'Reset via Email →'}
-              </Link>
-              <p className="text-[11px] text-slate-600 dark:text-slate-400 pt-1 border-t border-amber-200/60 dark:border-amber-900/60">
-                {isHindi
-                  ? 'अथवा पासवर्ड रीसेट के लिए बंशीधर पोल्ट्री कार्यालय से संपर्क करें।'
-                  : 'Or contact Banshidhar Poultry administrator for immediate credential reset.'}
-              </p>
-            </div>
-          )}
 
           <button
             type="submit"
