@@ -6,13 +6,41 @@
   html {
     scroll-behavior: smooth;
     font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+  }
+
+  body {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    overscroll-behavior-y: none;
+  }
+
+  /* Prevent auto-zoom on iOS Safari when focusing inputs */
+  @media screen and (max-width: 768px) {
+    input, select, textarea {
+      font-size: 16px !important;
+    }
   }
 }
 
-/* Custom Scrollbars */
+/* Safe Area Insets for iOS & modern Android notches */
+.pb-safe {
+  padding-bottom: env(safe-area-inset-bottom, 16px);
+}
+
+.pt-safe {
+  padding-top: env(safe-area-inset-top, 0px);
+}
+
+.bottom-safe {
+  bottom: env(safe-area-inset-bottom, 0px);
+}
+
+/* Custom Smooth Momentum Scrollbars */
 ::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
+  width: 5px;
+  height: 5px;
 }
 
 ::-webkit-scrollbar-track {
@@ -26,6 +54,15 @@
 
 .dark ::-webkit-scrollbar-thumb {
   background: #334155;
+}
+
+/* Touch active micro-animations for mobile buttons & cards */
+.app-touch-active {
+  transition: transform 0.1s ease, filter 0.1s ease;
+}
+
+.app-touch-active:active {
+  transform: scale(0.96);
 }
 
 /* Audio Recording Pulse */
@@ -46,6 +83,22 @@
 
 .recording-pulse {
   animation: pulse-ring 1.5s infinite cubic-bezier(0.4, 0, 0.6, 1);
+}
+
+/* Bottom Sheet Modal Animation for Mobile */
+@keyframes bottomSheetSlideUp {
+  from {
+    transform: translateY(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.animate-bottom-sheet {
+  animation: bottomSheetSlideUp 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
 /* Print Styles for Invoices & Statements */
