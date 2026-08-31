@@ -1,52 +1,78 @@
 # 🐔 BANSHIDHAR POULTRY (बंशीधर पोल्ट्री)
-### Complete Production-Quality Mobile-First Poultry Dealer Management Ecosystem
+### Complete Production-Quality Mobile-First Poultry Dealer Management Ecosystem & Digital Khatabook
 
 ---
 
-## 📖 Overview (परिचय)
+## 📖 Overview (सिस्टम परिचय)
 
-**BANSHIDHAR POULTRY** is a specialized, production-ready Poultry Dealership Management Ecosystem designed for poultry dealers, feed distributors, and rural farmers. 
+**BANSHIDHAR POULTRY** is an enterprise-grade, mobile-first Poultry Dealership Management Ecosystem designed for poultry dealers, feed & chick distributors, and rural farmers.
 
-This is **NOT** a standard e-commerce site. It provides full enterprise operational workflows:
-- **Public Business Website**: Informational catalogue with live poultry rates, weight calculator, and farmer registration (catalogue display-only; no public checkout).
-- **Installable Farmer PWA App**: Digital passbook (बकाया / एडवांस), live feed/chick ordering with snapshot-locked pricing, flock age tracking, voice messaging, and PDF statement downloads.
-- **Installable Admin PWA App**: Executive dashboard, automated farmer credential generation, double-sided ledger accounting, chick batch management, bird lifting weighment settlements, and audit logs.
-- **AI Poultry Health Doctor (कुक्कुट मित्र)**: Intelligent multi-provider failover (**AgentRouter → Google Gemini → Groq → Local RAG**) supporting text and photo vision analysis in Hindi, Hinglish, and English.
-- **Realtime Communication**: WhatsApp-style 1-on-1 audio voice note recording, photo/video media exchange, and live typing indicators.
+This is **NOT** a standard generic e-commerce app. It is tailored to the exact realities of poultry farm financing, chick rearing cycles, and market trade in India:
+- **Direct Portal Redirection**: Logged-in Admins are automatically routed to the **Admin Console (`/admin`)** and Farmers directly to the **Farmer Passbook (`/farmer`)** upon opening the app or visiting the root URL.
+- **Natural Hindi Web Push Notifications**: Automated background push alerts for farmer messages, order status updates, loose feed debits, cash loans (उधारी), dues collection receipts, chicken lifting credits, and registration alerts.
+- **Multi-Mode Digital Khatabook (खाताबही)**:
+  - **Debit Modes**: Standard catalog products, loose feed / custom items (e.g. `2 किलो दाना @ ₹40`), cash loans / udhari given to farmers (e.g. `₹5,000 काम के लिए नकद`), and manual debit adjustments.
+  - **Credit Modes**: Dues payment collection (with mandatory reason fill box e.g. `पुराना बकाया चुकता किया`), mature chicken lifting / bird purchase credits (`मुर्गों की संख्या`, `कुल वजन Kg`, `भाव ₹/Kg`, `गाड़ी नंबर / कांटा पर्ची`), special discounts, and credit adjustments.
+- **Flock Rearing & Live Bird Sales**: Real-time flock age tracking, mortality recording, mature bird lifting settlement with transit deduction calculations, and atomic ledger credit posting.
+- **AI Poultry Health Doctor (कुक्कुट मित्र)**: 3-tier intelligent failover engine (**AgentRouter → Google Gemini → Groq → Local Poultry RAG**) supporting multilingual text and vision analysis in Hindi, Hinglish, and English.
+- **Realtime Media & Audio Chat**: WhatsApp-style voice note recording with waveform player, photos, videos, and live typing indicators.
+- **A4 PDF Statement Generator**: Official printable statement with dealership branding, summary cards, and itemized debit/credit tables.
 
 ---
 
 ## 🏗️ Architecture & Core Rules (सिस्टम की मुख्य विशेषताएं)
 
 ```
-BANSHIDHAR POULTRY
-├── 🌐 Public Website (http://localhost:5173/)
-├── 👨‍🌾 Farmer PWA Portal (http://localhost:5173/farmer)
-├── 🛠️ Admin Dealership Console (http://localhost:5173/admin)
-├── 📊 Double-Sided Ledger (Debit = Purchases, Credit = Payments / Bird Sales)
-├── ⚖️ Bird Sale Settlement (Actual KG × Live Rate - Deductions = Net Credit)
-├── 🤖 AI Failover Engine (AgentRouter → Gemini → Groq → Local RAG + Vision)
-├── 🎙️ Realtime Socket.IO Audio & Chat
-└── 📄 PDF Statement Generator (A4 Printable Ledger Passbook)
+BANSHIDHAR POULTRY ECOSYSTEM
+├── 🌐 Public Website (http://localhost:5173/) [Informational rates & calculator]
+├── 👨‍🌾 Farmer PWA Portal (http://localhost:5173/farmer) [Passbook, Orders, Chat, AI]
+├── 🛠️ Admin Dealership Console (http://localhost:5173/admin) [Ledger, Settlements, Orders]
+├── 📊 Double-Sided Ledger [Debit = Supplies / Loans, Credit = Payments / Chicken Lifting]
+├── 🐔 Bird Lifting Settlement [Actual KG × Live Rate - Deductions = Net Credit]
+├── 🔔 Web Push Notifications [VAPID Service Worker + Natural Hindi Alerts]
+├── 🤖 3-Tier AI Failover Engine [AgentRouter → Gemini → Groq → Local RAG + Vision]
+├── 🎙️ Realtime Socket.IO Audio & Chat [Voice notes, photos, typing indicators]
+└── 📄 PDF Statement Generator [A4 Printable Ledger Passbook]
 ```
 
-### 1. Double-Sided Ledger Accounting (बकाया और एडवांस हिसाब)
-- **Debit (+)**: Feed Purchases, Chick Supplies, Debit Adjustments.
-- **Credit (-)**: Cash/Bank Payments Received, Advance Deposits, Bird Sale Lifting Credits, Discounts.
-- **Net Balance** = `Total Debit - Total Credit`
-  - If `Net Balance > 0` ➔ **आपका बकाया (Due / Market Receivable)**
-  - If `Net Balance < 0` ➔ **आपका एडवांस (Advance Deposit)**
-  - If `Net Balance = 0` ➔ **हिसाब चुकता (Settled)**
+### 1. Role-Based Portal Routing (डायरेक्ट पोर्टल रिडायरेक्शन)
+| User Status | Accessed Route | Resulting Route |
+| :--- | :--- | :--- |
+| **Logged-in Admin** | `/` or `/admin/login` | **`/admin`** (Dealership Console) |
+| **Logged-in Farmer** | `/` or `/farmer/login` | **`/farmer`** (Farmer Passbook & Portal) |
+| **Unauthenticated Guest** | `/` | **`/`** (Public Homepage with Live Rates) |
 
-### 2. Snapshot Price Integrity (मूल्य अखंडता)
-When an order is created, product prices are locked into the order snapshot. Future price modifications in the admin catalog will **never** alter historical order totals or passbook debits.
+---
 
-### 3. Intelligent AI Health Doctor (3-Tier Failover + Vision)
-- **Priority 1**: **AgentRouter** (`claude-3-5-sonnet-20241022` / `gpt-4o`)
-- **Priority 2**: **Google Gemini** (`gemini-1.5-flash` / `gemini-1.5-pro`)
-- **Priority 3**: **Groq** (`llama-3.3-70b-versatile` / `llama-3.2-11b-vision-preview`)
-- **Fallback**: **Intelligent Local Poultry RAG Knowledge Base**
-- **Circuit Breaker**: If any provider experiences 429 rate limit, timeout, or server error, it automatically enters a 60-second cooldown and routes seamlessly to the next provider.
+### 2. Double-Sided Khatabook Accounting (खाताबही गणित)
+
+* **नामे (Debit - DR)**:
+  * Catalog Product Purchases (दाना, चूजा, दवाई)
+  * Loose Feed & Custom Items (उदा. `2 किलो दाना @ ₹40`)
+  * Cash Loans / Udhari (उदा. `₹5,000 उधारी / नकद सहायता`)
+  * Debit Adjustments
+* **जमा (Credit - CR)**:
+  * Dues Payment Receipts (उदा. `भुगतान जमा: पुराना बकाया चुकता किया`)
+  * Mature Chicken Lifting / Bird Purchase (उदा. `बड़ा मुर्गा उठाया: 200 पीस, 450.5 किग्रा @ ₹95/किग्रा`)
+  * Special Discounts (उदा. `गर्मी राहत विशेष छूट`)
+  * Credit Adjustments
+* **Net Balance** = `Total Debit - Total Credit`
+  * If `Net Balance > 0` ➔ **आपका बकाया (Due / Market Receivable)**
+  * If `Net Balance < 0` ➔ **आपका एडवांस (Advance Deposit)**
+  * If `Net Balance = 0` ➔ **हिसाब चुकता (Zero Balance)**
+
+---
+
+### 3. Natural Hindi Push Notifications (सहज हिंदी में पुश नोटिफिकेशन्स)
+
+* **VAPID Keypair Infrastructure**: Configured with standard web-push keys in `server/.env` and background PWA Service Worker ([client/public/sw.js](file:///Users/nishantkumar/Desktop/project/Banshidhar_poultary/client/public/sw.js)).
+* **Automatic Client Subscription**: Handles permission prompt and subscription persistence in [AuthContext.tsx](file:///Users/nishantkumar/Desktop/project/Banshidhar_poultary/client/src/context/AuthContext.tsx).
+* **Sample Real-World Notifications**:
+  * 🐔 **बड़ा मुर्गा बिक्री:** `🐔 बड़ा मुर्गा बिक्री राशि जमा हुई` → *डीलर द्वारा बड़ा मुर्गा उठाया/बिक्री: 200 पीस, 450.5 किग्रा @ ₹95/किग्रा (₹42,797.50) आपके खाते में जमा किया गया।*
+  * 💵 **बकाया भुगतान:** `✅ भुगतान जमा सफल (रसीद)` → *डीलर द्वारा ₹5,000 का भुगतान जमा (भुगतान जमा: पुराना बकाया चुकता किया) आपके खाते में दर्ज किया गया।*
+  * 🌾 **खुला दाना:** `🌾 नया सामान / दाना आपके खाते में जुड़ा` → *डीलर द्वारा 2 किलो दाना (₹80) आपके खाते में नामे (Debit) किया गया।*
+  * 💸 **उधारी / नकद:** `💸 उधारी / नकद राशि दर्ज हुई` → *डीलर द्वारा ₹5,000 (उधारी / नकद सहायता) आपके खाते में नामे (Debit) किया गया।*
+  * 💬 **डीलर चैट:** `💬 बंशीधर पोल्ट्री से नया संदेश` → *"{संदेश का टेक्स्ट}"*
 
 ---
 
@@ -61,19 +87,16 @@ When an order is created, product prices are locked into the order snapshot. Fut
 
 ## ⚙️ Prerequisites (आवश्यक सॉफ्टवेयर)
 
-Ensure you have the following installed on your machine:
+Ensure you have the following installed:
 1. **Node.js**: v18.0.0 or higher ([Download Node.js](https://nodejs.org/))
 2. **npm**: v9.0.0 or higher
-3. **MongoDB**: Local MongoDB instance (`mongodb://127.0.0.1:27017`) or a MongoDB Atlas connection string.
+3. **MongoDB**: Local MongoDB instance (`mongodb://127.0.0.1:27017`) or MongoDB Atlas URI.
 
 ---
 
-## 🚀 Step-by-Step Installation Guide (एक-एक स्टेप गाइड)
+## 🚀 Step-by-Step Installation Guide (इंस्टॉलेशन गाइड)
 
-Follow these steps to run the complete ecosystem locally:
-
-### Step 1: Open the Project Directory
-Open your terminal and navigate to the project directory:
+### Step 1: Clone or Navigate to Directory
 ```bash
 cd /Users/nishantkumar/Desktop/project/Banshidhar_poultary
 ```
@@ -86,48 +109,36 @@ Create or verify the `server/.env` file:
 cp .env.example server/.env
 ```
 
-Review and update your `server/.env` configuration:
+Review and configure your `server/.env`:
 ```env
-# Server Port & URLs
 PORT=5050
 NODE_ENV=development
 CLIENT_URL=http://localhost:5173
 
-# MongoDB Connection
 MONGODB_URI=mongodb://127.0.0.1:27017/banshidhar_poultry
 
-# JWT Authentication
 JWT_SECRET=super_secret_jwt_key_banshidhar_poultry_production_ready_2026
 JWT_EXPIRES_IN=7d
 
-# Media Uploads (Optional Cloudinary - local disk storage fallback is enabled)
+# Media Uploads (Cloudinary optional - local fallback active)
 CLOUDINARY_CLOUD_NAME=
 CLOUDINARY_API_KEY=
 CLOUDINARY_API_SECRET=
 
-# Brevo (Sendinblue) Email Provider for Password Reset
-BREVO_API_KEY=
-BREVO_SENDER_EMAIL=noreply@banshidharpoultry.com
-BREVO_SENDER_NAME=Banshidhar Poultry
+# Web Push Notification VAPID Keys
+VAPID_PUBLIC_KEY=BHnfWgwgHdKgi35abqRY5-Gd9nCxt5gpKxR1LxUu7vkSAkhVB96ZSXK6TJP6s0o9vy2TRiWIw--iZxNh66fwDOg
+VAPID_PRIVATE_KEY=qFI7KZhlj5_L5FkImpsQAlTmelWECtCKHuxAwn1TePU
+VAPID_SUBJECT=mailto:admin@banshidharpoultry.com
 
-# AI Poultry Health Assistant Providers (Intelligent Failover)
+# AI Health Assistant Providers (Optional - Local RAG is built-in)
 AGENTROUTER_API_KEY=
-AGENTROUTER_BASE_URL=https://api.agentrouter.com/v1
-AGENTROUTER_MODEL=claude-3-5-sonnet-20241022
-
 GEMINI_API_KEY=
-GEMINI_MODEL=gemini-1.5-flash
-
 GROQ_API_KEY=
-GROQ_MODEL=llama-3.3-70b-versatile
 ```
-
-> **Note**: Even if external API keys (`AGENTROUTER_API_KEY`, `GEMINI_API_KEY`, `GROQ_API_KEY`) are left blank during development, the system **automatically falls back to the built-in Local Poultry RAG Engine**, ensuring all AI features work seamlessly offline!
 
 ---
 
 ### Step 3: Install Dependencies
-Install all root, backend, and frontend packages with npm workspaces:
 ```bash
 npm install
 ```
@@ -135,132 +146,116 @@ npm install
 ---
 
 ### Step 4: Seed Database with Initial Data
-Initialize default admin accounts, sample farmer (`BP-1001`), product catalog, daily rates, flock batch, and passbook ledger transactions:
 ```bash
 npm run seed
 ```
 
 ---
 
-### Step 5: Run the Full Ecosystem in Development Mode
-Start both the Backend API server (Port 5050) and Frontend Vite dev server (Port 5173) simultaneously:
+### Step 5: Start Development Servers
 ```bash
 npm run dev
 ```
 
-You will see:
-```
-🐔 BANSHIDHAR POULTRY SERVER STARTED
-🌐 Server URL: http://localhost:5050
-📡 Realtime Socket.IO: Active
-📁 Uploads dir: .../server/uploads
-
-  VITE v6.4.3  ready in 400 ms
-  ➜  Local:   http://localhost:5173/
-```
-
-- **Open Public Website**: [http://localhost:5173/](http://localhost:5173/)
-- **Open Farmer Login**: [http://localhost:5173/farmer/login](http://localhost:5173/farmer/login)
-- **Open Admin Dashboard**: [http://localhost:5173/admin/login](http://localhost:5173/admin/login)
+* **Frontend Vite Dev Server**: [http://localhost:5173](http://localhost:5173)
+* **Backend API Server**: [http://localhost:5050](http://localhost:5050)
 
 ---
 
 ### Step 6: Run Automated Tests
-Execute the Vitest test suite to verify accounting math, snapshot integrity, and AI failover:
 ```bash
 npm run test
-```
-
-Expected output:
-```
-✓ tests/priceSnapshot.test.ts (1 test)
-✓ tests/ledger.test.ts (2 tests)
-✓ tests/aiFailover.test.ts (6 tests)
-Test Files  3 passed (3)
-Tests       9 passed (9)
 ```
 
 ---
 
 ### Step 7: Build for Production
-To build production bundles for both backend and client with PWA service worker generation:
 ```bash
 npm run build
 ```
 
 ---
 
-## 📱 Features Walkthrough (सुविधाओं का विवरण)
+## 📱 Features Walkthrough (सुविधाओं का विस्तृत विवरण)
 
 ### 1. 🌐 Public Website (`/`)
-- **Hero Video & Poster**: Autoplay muted video with poster fallback, brand badge, and action buttons.
-- **Download Farmer App**: Prominent PWA installation prompt with offline access benefits.
-- **Today's Poultry Rates**: Live chick prices, live bird lifting rates, and feed bag rates.
-- **Product Catalog**: High-quality feed and chick displays (catalogue only; no direct public checkout).
-- **Weight × Rate Calculator**: Automatic gross calculator (Birds × Avg Weight × Rate/KG) with one-click copy and WhatsApp sharing.
-- **Farmer Registration Form (`/join`)**: Online registration for new farmers.
+* **Hero Banner**: High-resolution video presentation, live chick prices, and direct app install link.
+* **Live Market Rates**: Daily updated chick rates, mature bird lifting rates, and feed bag prices.
+* **Weight × Rate Calculator**: Instant gross calculation (`Birds × Weight × Rate`) with one-click WhatsApp share.
+* **Farmer Registration (`/join`)**: New farmers can submit registration details directly to the dealership.
 
 ---
 
 ### 2. 👨‍🌾 Farmer Portal & Installable PWA (`/farmer`)
-- **Passbook Summary Banner**: Clear visibility of **आपका बकाया (Due)** vs **आपका एडवांस (Advance)**.
-- **Live Ordering**: Browse dealer products, choose quantities, and place orders with locked prices.
-- **Flock Batch Tracker**: Days old calculation, mortality recording, and **Inform Dealer: Birds Ready for Lifting** notification.
-- **Digital Passbook / Ledger**: Detailed list of purchases, payments, and 1-click **A4 PDF Statement Download**.
-- **Realtime Chat**: Voice notes with waveform player, photos, videos, and delivery receipts.
-- **AI Health Doctor**: Floating chat assistant with poultry disease image recognition in Hindi, Hinglish, and English.
+* **Passbook Summary Banner**: Real-time status of **बकाया (Due)** vs **एडवांस (Advance)**.
+* **Digital Passbook**: Every entry shows exact Date & Time, Description/Reason, Payment Mode / Vehicle details, DR/CR, and Running Balance.
+* **A4 PDF Statement**: One-click download of official passbook statement.
+* **Direct Feed & Chick Ordering**: Browse dealership products and submit orders with locked snapshot pricing.
+* **Flock Batch Tracker**: Days old calculation, mortality recording, and **Inform Dealer: Birds Ready for Lifting** notification.
+* **Realtime Chat & Audio Notes**: 1-on-1 messaging with voice notes, image sharing, and read receipts.
+* **AI Poultry Health Doctor**: Multilingual assistant capable of diagnosing disease symptoms and bird photos.
 
 ---
 
 ### 3. 🛠️ Admin Dealership Console (`/admin`)
-- **Executive Metrics**: Total Receivables (market due) vs Total Advance credit across all farmers.
-- **Farmer Management**: Auto-generated sequential Farmer IDs (`BP-1001`, `BP-1002`...), temporary passwords, and **Credentials Card** (Copy, Print, WhatsApp Share).
-- **Farmer 360° Console**:
-  - Ledger with manual payment/debit entries and transaction voiding.
-  - Create Order on behalf of farmer.
-  - Chick supply & flock batch creation.
-  - Bird sale lifting settlements with gross/deduction breakdown.
-- **Bird Sale Settlements**: Weight × Live Rate gross calculation, transit/mortality deductions, and atomic ledger credit posting.
-- **AI Health Doctor Settings**: Realtime health monitor for **AgentRouter**, **Google Gemini**, and **Groq**, model selector, and cooldown configuration.
-- **Audit Logs**: Immutable log of all financial updates, rate modifications, and authentication events.
+* **Executive Financial Metrics**: Total market receivables, total advance deposits, active flock counts, and pending orders.
+* **Farmer 360° Management**:
+  * Sequential Farmer IDs (`BP-1001`, `BP-1002`...).
+  * Credential Cards with 1-click WhatsApp credentials share.
+  * Direct order placement on behalf of farmers.
+* **Multi-Mode Debit Modal**:
+  * `CATALOG`: Feed, chicks, medicines from active catalog.
+  * `CUSTOM_ITEM`: Loose feed (e.g. `2 किलो दाना @ ₹40`), customized medicines.
+  * `LOAN_CASH`: Cash loans / udhari with reason (e.g. `₹5,000 काम के लिए नकद`).
+  * `ADJUSTMENT`: Ledger balance corrections.
+* **Multi-Mode Credit Modal**:
+  * `PAYMENT`: Dues collection with payment mode & mandatory **Reason fill box**.
+  * `BIRD_SALE`: Mature chicken lifting with birds count, total kg, rate per kg, vehicle/weigh slip notes.
+  * `DISCOUNT`: Special relief / seasonal discounts.
+  * `ADJUSTMENT_CREDIT`: Credit adjustments.
+* **Audit Trail**: Immutable logs of all financial entries, transaction voids, and administrative actions.
 
 ---
 
 ## 🔌 API Reference (मुख्य API एंडपॉइंट्स)
 
 ### 🔐 Authentication & Accounts
-- `POST /api/auth/admin/login` — Admin login
-- `POST /api/auth/farmer/login` — Farmer login
-- `POST /api/auth/forgot-password` — Password reset link via Brevo
-- `POST /api/auth/reset-password` — Set new password with token
-- `POST /api/auth/change-password` — Change password inside portal
+* `POST /api/auth/admin/login` — Admin login
+* `POST /api/auth/farmer/login` — Farmer login
+* `POST /api/auth/forgot-password` — Request password reset
+* `POST /api/auth/reset-password` — Set new password with token
 
-### 📋 Farmers Management
-- `GET /api/farmers` — List all farmers with balance summaries
-- `POST /api/farmers` — Create farmer & generate credentials
-- `GET /api/farmers/:id` — Farmer details
-- `POST /api/farmers/:id/reset-password` — Generate new temporary password
+### 📋 Farmer Management
+* `GET /api/farmers` — List all farmers with balance summaries
+* `POST /api/farmers` — Create farmer & generate credentials
+* `GET /api/farmers/:id` — Farmer profile details
+* `POST /api/farmers/:id/reset-password` — Reset temporary password
 
-### 💰 Double-Sided Ledger
-- `GET /api/ledger/farmer/:farmerId` — Get farmer ledger & balance summary
-- `GET /api/ledger/farmer/:farmerId/pdf` — Download printable A4 PDF statement
-- `POST /api/ledger/transaction` — Add manual ledger entry (Payment / Debit)
-- `POST /api/ledger/transaction/:id/void` — Void / reverse a transaction
+### 💰 Double-Sided Ledger & Khatabook
+* `GET /api/ledger/khatabook/overview` — Admin Khatabook overview with search & filters
+* `GET /api/ledger/farmer/:farmerId` — Get farmer ledger & balance summary
+* `GET /api/ledger/farmer/:farmerId/pdf` — Download printable A4 PDF statement
+* `POST /api/ledger/transaction` — Add manual entry (Debit / Loose Feed / Loan / Payment / Chicken Lifting)
+* `POST /api/ledger/transaction/:id/void` — Void / reverse a transaction
+
+### 🔔 Web Push Notifications
+* `GET /api/notifications/vapid-key` — Get public VAPID key
+* `POST /api/notifications/push-subscribe` — Save browser push subscription
+* `GET /api/notifications` — Get user notifications
 
 ### 📦 Orders & Catalog
-- `GET /api/products/active` — Active catalog products
-- `POST /api/orders` — Create new order with snapshot pricing
-- `PUT /api/orders/:id/status` — Update status (PENDING ➔ CONFIRMED ➔ DELIVERED)
+* `GET /api/products/active` — Active catalog products
+* `POST /api/orders` — Create new order with locked snapshot pricing
+* `PUT /api/orders/:id/status` — Update order status
 
 ### 🐥 Chick Batches & Bird Sales
-- `POST /api/batches/supply` — Record chick supply & create flock batch
-- `POST /api/batches/:id/sale-inquiry` — Farmer lifting notification
-- `POST /api/bird-sales/settle` — Record bird lifting (Weight × Rate) & post credit
+* `POST /api/batches/supply` — Record chick supply & initialize flock batch
+* `POST /api/batches/:id/sale-inquiry` — Send bird lifting notification to dealer
+* `POST /api/bird-sales/settle` — Record mature bird sale settlement & post credit
 
 ### 🤖 AI Poultry Health Assistant
-- `GET /api/ai/status` — Check if AI assistant is enabled
-- `GET /api/ai/health` — Live health status of AgentRouter, Gemini, and Groq
-- `POST /api/ai/chat` — Chat with AI assistant (supports text + image uploads)
+* `GET /api/ai/health` — Live health check of AI providers
+* `POST /api/ai/chat` — Chat with AI assistant (Text + Vision image analysis)
 
 ---
 
@@ -270,7 +265,7 @@ npm run build
 Banshidhar_poultary/
 ├── package.json               # Root workspaces configuration
 ├── .env.example               # Environment variables template
-├── README.md                  # Complete documentation (this file)
+├── README.md                  # Comprehensive documentation
 │
 ├── server/                    # Backend (Node.js, Express, TypeScript, MongoDB)
 │   ├── package.json
@@ -279,12 +274,12 @@ Banshidhar_poultary/
 │   ├── src/
 │   │   ├── config/            # Database connection
 │   │   ├── constants/         # Poultry RAG knowledge base
-│   │   ├── controllers/       # Route controllers (Auth, Ledger, Orders, AI, etc.)
+│   │   ├── controllers/       # Route controllers (Auth, Ledger, Orders, AI, Push)
 │   │   ├── middlewares/       # Authentication, Upload, Error handler
-│   │   ├── models/            # 19 Mongoose schemas
+│   │   ├── models/            # 19 Mongoose schemas (Farmer, LedgerTransaction, PushSubscription...)
 │   │   ├── routes/            # Express routes
 │   │   ├── scripts/           # Database seeder (seed.ts)
-│   │   ├── services/          # AI failover, PDF statement, Socket.IO, Email
+│   │   ├── services/          # PushService, PDFService, SocketService, EmailService
 │   │   │   └── aiProviders/   # AgentRouterProvider, GeminiProvider, GroqProvider
 │   │   ├── types/             # Backend TypeScript interfaces
 │   │   └── server.ts          # Server entry point (Port 5050)
@@ -295,30 +290,19 @@ Banshidhar_poultary/
     ├── vite.config.ts         # Vite configuration with PWA & API proxy
     ├── tailwind.config.js
     ├── index.html
+    ├── public/
+    │   └── sw.js              # Background Push & Notification Click Service Worker
     └── src/
         ├── api/               # Axios client & currency formatters
-        ├── components/        # Logo, Loader, AudioRecorder/Player, AI Modal, Cards
+        ├── components/        # UI components, AudioRecorder, AI Assistant Modal
         ├── context/           # AuthContext, LanguageContext, ThemeContext, SocketContext
         ├── i18n/              # English & Hindi translation dictionaries
         ├── layouts/           # PublicLayout, FarmerLayout, AdminLayout
         ├── pages/             # Public, Auth, Farmer, and Admin pages
+        ├── utils/             # Push notification subscription helpers
         ├── types/             # Frontend TypeScript interfaces
-        ├── App.tsx            # React router with role guards
+        ├── App.tsx            # React router with smart RootRedirect & role guards
         └── main.tsx           # Application root
-```
-
----
-
-## 🧪 Testing & Verification (जांच एवं परीक्षण)
-
-To run the automated tests:
-```bash
-npm run test --workspace=server
-```
-
-To run a production client build check:
-```bash
-npm run build --workspace=client
 ```
 
 ---
