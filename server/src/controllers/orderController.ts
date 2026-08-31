@@ -7,6 +7,7 @@ import { LedgerTransaction } from '../models/LedgerTransaction';
 import { AuditLog } from '../models/AuditLog';
 import { AuthenticatedRequest, OrderStatus } from '../types';
 import { emitNotification, emitOrderUpdate } from '../services/socketService';
+import { sendPushToUser, sendPushToRole } from '../services/pushService';
 
 // Helper to generate unique Order ID e.g. ORD-2026-0001
 const generateOrderId = async (): Promise<string> => {
@@ -119,6 +120,14 @@ export const createOrder = async (req: AuthenticatedRequest, res: Response): Pro
         metadata: { orderId: order._id }
       });
       emitNotification(farmerNotification);
+
+      // Push to Farmer in Hindi
+      sendPushToUser(String(farmerDoc._id), {
+        title: '📦 नया ऑर्डर दर्ज हुआ',
+        body: `डीलरशिप द्वारा आपके खाते में नया ऑर्डर #${orderId} (₹${totalAmount}) दर्ज किया गया।`,
+        url: `/farmer/orders/${order._id}`,
+        tag: `order-${order._id}`
+      }).catch((err) => console.error('Push error:', err));
     } else {
       const adminNotification = await Notification.create({
         recipientRole: 'ADMIN',
@@ -131,6 +140,14 @@ export const createOrder = async (req: AuthenticatedRequest, res: Response): Pro
         metadata: { orderId: order._id, farmerId: farmerDoc._id }
       });
       emitNotification(adminNotification);
+
+      // Push to Admin in Hindi
+      sendPushToRole('ADMIN', {
+        title: `📦 नया ऑर्डर: ${farmerDoc.name}`,
+        body: `किसान ${farmerDoc.name} ने ₹${totalAmount} का नया ऑर्डर #${orderId} दिया है।`,
+        url: `/admin/orders`,
+        tag: `order-${order._id}`
+      }).catch((err) => console.error('Push error:', err));
     }
 
     emitOrderUpdate(order);
@@ -290,6 +307,21 @@ export const updateOrderStatus = async (req: AuthenticatedRequest, res: Response
 
     emitNotification(notif);
     emitOrderUpdate(order);
+
+    // Push to Farmer in Hindi
+    const pushStatusHi: Record<OrderStatus, string> = {
+      PENDING: 'प्रतीक्षारत (Pending)',
+      CONFIRMED: 'स्वीकृत (Confirmed) - गाड़ी तैयार है',
+      DELIVERED: 'सफलतापूर्वक डिलीवर हो गया',
+      CANCELLED: 'रद्द कर दिया गया'
+    };
+
+    sendPushToUser(String(order.farmerId), {
+      title: `📦 ऑर्डर स्थिति: ${statusTitles[status]?.hi || status}`,
+      body: `आपके ऑर्डर #${order.orderId} की स्थिति अब "${pushStatusHi[status] || status}" है।`,
+      url: `/farmer/orders/${order._id}`,
+      tag: `order-status-${order._id}`
+    }).catch((err) => console.error('Push error:', err));
 
     await AuditLog.create({
       actorId: user?.userId || 'ADMIN',

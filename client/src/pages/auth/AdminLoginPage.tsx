@@ -7,7 +7,7 @@ import { ChickLogo } from '../../components/ChickLogo';
 
 export const AdminLoginPage: React.FC = () => {
   const navigate = useNavigate();
-  const { login } = useAuth();
+  const { login, user, isAuthenticated } = useAuth();
 
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
@@ -15,6 +15,12 @@ export const AdminLoginPage: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [lockCountdown, setLockCountdown] = useState<number>(0);
+
+  useEffect(() => {
+    if (isAuthenticated && user?.role === 'ADMIN') {
+      navigate('/admin', { replace: true });
+    }
+  }, [isAuthenticated, user, navigate]);
 
   useEffect(() => {
     if (lockCountdown <= 0) return;

@@ -64,12 +64,27 @@ const AdminRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   return <>{children}</>;
 };
 
+// Root Redirection Component (Direct Admin / Farmer Portal on app open, Homepage if guest)
+const RootRedirect: React.FC = () => {
+  const { user, isAuthenticated, loading } = useAuth();
+  if (loading) return <ChickLoader text="Opening..." />;
+  if (isAuthenticated && user) {
+    if (user.role === 'ADMIN') {
+      return <Navigate to="/admin" replace />;
+    }
+    if (user.role === 'FARMER') {
+      return <Navigate to="/farmer" replace />;
+    }
+  }
+  return <HomePage />;
+};
+
 export const App: React.FC = () => {
   return (
     <Routes>
       {/* Public Routes */}
       <Route path="/" element={<PublicLayout />}>
-        <Route index element={<HomePage />} />
+        <Route index element={<RootRedirect />} />
         <Route path="*" element={<NotFoundPage />} />
       </Route>
 

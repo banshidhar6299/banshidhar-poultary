@@ -7,6 +7,7 @@ import { AuditLog } from '../models/AuditLog';
 import { AuthenticatedRequest, TransactionType } from '../types';
 import { generateLedgerPDF } from '../services/pdfService';
 import { emitNotification, emitLedgerUpdate } from '../services/socketService';
+import { sendPushToUser } from '../services/pushService';
 import { getFarmerBalanceSummary } from './farmerController';
 
 // Get Ledger Statement & Balances (Admin gets any farmer, Farmer gets own)
@@ -199,10 +200,41 @@ export const addLedgerTransaction = async (req: AuthenticatedRequest, res: Respo
 
     // Send Notification to Farmer
     const isPayment = ['PAYMENT_RECEIVED', 'ADVANCE_PAYMENT'].includes(transactionType);
-    const notifTitle = isPayment ? 'Payment Received / भुगतान प्राप्त' : 'Account Entry Added / खाता प्रविष्टि';
-    const notifMsg = isPayment
-      ? `Received payment of ₹${finalAmount} on your Banshidhar Poultry account.`
-      : `New entry of ₹${finalAmount} (${autoDesc}) posted to your account.`;
+    const isBirdSale = transactionType === 'BIRD_SALE_CREDIT';
+    const isDiscount = transactionType === 'DISCOUNT';
+    const isCreditAdj = transactionType === 'ADJUSTMENT_CREDIT';
+    
+    let notifTitle = 'Account Entry Added / खाता प्रविष्टि';
+    let notifMsg = `New entry of ₹${finalAmount} (${autoDesc}) posted to your account.`;
+    let pushTitle = '🌾 नया सामान / दाना आपके खाते में जुड़ा';
+    let pushBody = `डीलर द्वारा ${autoDescHi || autoDesc} (₹${finalAmount}) आपके खाते में नामे (Debit) किया गया।`;
+
+    if (isPayment) {
+      notifTitle = 'Payment Received / भुगतान प्राप्त';
+      notifMsg = `Received payment of ₹${finalAmount} on your Banshidhar Poultry account. (${autoDesc})`;
+      pushTitle = '✅ भुगतान जमा सफल (रसीद)';
+      pushBody = `डीलर द्वारा ₹${finalAmount} का भुगतान जमा (${autoDescHi || autoDesc}) आपके खाते में दर्ज किया गया।`;
+    } else if (isBirdSale) {
+      notifTitle = 'Chicken Sale Credit / बड़ा मुर्गा बिक्री जमा';
+      notifMsg = `A credit of ₹${finalAmount} for chicken sale/lifting (${autoDesc}) has been credited to your account.`;
+      pushTitle = '🐔 बड़ा मुर्गा बिक्री राशि जमा हुई';
+      pushBody = `डीलर द्वारा ${autoDescHi || autoDesc} (₹${finalAmount}) आपके खाते में जमा किया गया।`;
+    } else if (isDiscount) {
+      notifTitle = 'Special Discount / विशेष छूट';
+      notifMsg = `A special discount of ₹${finalAmount} (${autoDesc}) has been credited to your account.`;
+      pushTitle = '🎉 विशेष छूट प्रदान की गई';
+      pushBody = `डीलर द्वारा ₹${finalAmount} की विशेष छूट आपके खाते में जमा की गई है।`;
+    } else if (isCreditAdj) {
+      notifTitle = 'Credit Adjustment / जमा समायोजन';
+      notifMsg = `An adjustment credit of ₹${finalAmount} (${autoDesc}) has been applied to your account.`;
+      pushTitle = '⚖️ जमा समायोजन प्रविष्टि';
+      pushBody = `₹${finalAmount} का जमा समायोजन (${autoDescHi || autoDesc}) आपके खाते में दर्ज किया गया।`;
+    } else if (transactionType === 'ADJUSTMENT_DEBIT') {
+      notifTitle = 'Account Debit / नामे / उधारी प्रविष्टि';
+      notifMsg = `An amount of ₹${finalAmount} (${autoDesc}) has been debited to your account.`;
+      pushTitle = '💸 उधारी / नकद राशि दर्ज हुई';
+      pushBody = `डीलर द्वारा ₹${finalAmount} (${autoDescHi || autoDesc}) आपके खाते में नामे (Debit) किया गया।`;
+    }
 
     const notif = await Notification.create({
       recipientRole: 'FARMER',
@@ -216,6 +248,14 @@ export const addLedgerTransaction = async (req: AuthenticatedRequest, res: Respo
 
     emitNotification(notif);
     emitLedgerUpdate(farmer._id.toString(), balanceSummary);
+
+    // Dispatch Web Push Notification in Natural Hindi to Farmer
+    sendPushToUser(farmer._id.toString(), {
+      title: pushTitle,
+      body: pushBody,
+      url: '/farmer/ledger',
+      tag: `ledger-${transaction._id}`
+    }).catch((err) => console.error('Push error:', err));
 
     await AuditLog.create({
       actorId: user?.userId || 'ADMIN',

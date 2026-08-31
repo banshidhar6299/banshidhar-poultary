@@ -71,6 +71,16 @@ export const markNotificationRead = async (req: AuthenticatedRequest, res: Respo
   }
 };
 
+// Get VAPID Public Key for client subscription
+export const getVapidPublicKey = async (_req: Request, res: Response): Promise<void> => {
+  const publicKey = process.env.VAPID_PUBLIC_KEY;
+  if (!publicKey) {
+    res.status(500).json({ success: false, message: 'VAPID public key not configured on server.' });
+    return;
+  }
+  res.json({ success: true, publicKey });
+};
+
 // Save Web Push Subscription
 export const savePushSubscription = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
   try {

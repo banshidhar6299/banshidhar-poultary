@@ -8,6 +8,7 @@ import { AuditLog } from '../models/AuditLog';
 import { AuthenticatedRequest } from '../types';
 import { generateFarmerId, generateTemporaryPassword } from '../utils/helpers';
 import { emitNotification } from '../services/socketService';
+import { sendPushToRole } from '../services/pushService';
 
 // Public: Submit Farmer Join Request
 export const submitJoinRequest = async (req: Request, res: Response): Promise<void> => {
@@ -63,6 +64,14 @@ export const submitJoinRequest = async (req: Request, res: Response): Promise<vo
     });
 
     emitNotification(notification);
+
+    // Push to Admin in Hindi
+    sendPushToRole('ADMIN', {
+      title: `🌾 नया किसान पंजीकरण: ${fullName}`,
+      body: `${fullName} (${village}, ${district}, फोन: ${phone}) ने जुड़ने का आवेदन भेजा है।`,
+      url: '/admin/join-requests',
+      tag: `join-${joinRequest._id}`
+    }).catch((err) => console.error('Push error:', err));
 
     res.status(201).json({
       success: true,

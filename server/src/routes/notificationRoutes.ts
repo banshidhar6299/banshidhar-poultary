@@ -2,11 +2,15 @@ import { Router } from 'express';
 import {
   getNotifications,
   markNotificationRead,
-  savePushSubscription
+  savePushSubscription,
+  getVapidPublicKey
 } from '../controllers/notificationController';
 import { authenticateToken } from '../middlewares/auth';
 
 const router = Router();
+
+// Public route for VAPID Key
+router.get('/vapid-key', getVapidPublicKey);
 
 router.use(authenticateToken);
 

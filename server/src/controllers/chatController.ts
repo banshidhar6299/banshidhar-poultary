@@ -5,6 +5,7 @@ import { Notification } from '../models/Notification';
 import { AuthenticatedRequest, MessageType } from '../types';
 import { processUploadedFile } from '../middlewares/upload';
 import { emitMessage, emitNotification } from '../services/socketService';
+import { sendPushToUser, sendPushToRole } from '../services/pushService';
 
 // Admin: Get all conversations
 export const getAdminConversations = async (_req: AuthenticatedRequest, res: Response): Promise<void> => {
@@ -181,7 +182,7 @@ export const sendMessage = async (req: AuthenticatedRequest, res: Response): Pro
     // Emit Realtime Message
     emitMessage(conversationId, message);
 
-    // Create In-App Notification if recipient is offline or in background
+    // Create In-App Notification & Push Notification
     if (user.role === 'ADMIN') {
       const notif = await Notification.create({
         recipientRole: 'FARMER',
@@ -194,6 +195,14 @@ export const sendMessage = async (req: AuthenticatedRequest, res: Response): Pro
         metadata: { conversationId: conversation._id }
       });
       emitNotification(notif);
+
+      // Send Natural Hindi Push Notification to Farmer
+      sendPushToUser(String(conversation.farmerId), {
+        title: '💬 बंशीधर पोल्ट्री से नया संदेश',
+        body: preview || 'डीलरशिप से आपको नया संदेश प्राप्त हुआ है।',
+        url: '/farmer/messages',
+        tag: `chat-${conversation._id}`
+      }).catch((err) => console.error('Push error:', err));
     } else {
       const notif = await Notification.create({
         recipientRole: 'ADMIN',
@@ -205,6 +214,14 @@ export const sendMessage = async (req: AuthenticatedRequest, res: Response): Pro
         metadata: { conversationId: conversation._id, farmerId: conversation.farmerId }
       });
       emitNotification(notif);
+
+      // Send Natural Hindi Push Notification to Admin
+      sendPushToRole('ADMIN', {
+        title: `💬 किसान संदेश: ${user.name}`,
+        body: preview || 'किसान ने नया संदेश भेजा है।',
+        url: '/admin/messages',
+        tag: `chat-${conversation._id}`
+      }).catch((err) => console.error('Push error:', err));
     }
 
     res.status(201).json({ success: true, data: message });

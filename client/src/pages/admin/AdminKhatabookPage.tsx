@@ -21,7 +21,12 @@ import {
   Clock,
   CreditCard,
   IndianRupee,
-  Sparkles
+  Sparkles,
+  Wheat,
+  Banknote,
+  Scale,
+  Gift,
+  Coins
 } from 'lucide-react';
 import { api, formatINR, formatDate, formatDateTime } from '../../api/client';
 import { useLanguage } from '../../context/LanguageContext';
@@ -73,12 +78,33 @@ export const AdminKhatabookPage: React.FC = () => {
   const [filterType, setFilterType] = useState<'ALL' | 'DUE' | 'ADVANCE' | 'SETTLED'>('ALL');
   const [activeTab, setActiveTab] = useState<'FARMERS' | 'TRANSACTIONS'>('FARMERS');
 
-  // Modal 1: Issue Goods (सामान दिया)
+  // Modal 1: Debit / Goods / Loose Feed / Udhari
   const [goodsModalOpen, setGoodsModalOpen] = useState(false);
+  const [entryMode, setEntryMode] = useState<'CATALOG' | 'CUSTOM_ITEM' | 'LOAN_CASH' | 'ADJUSTMENT'>('CATALOG');
   const [selectedFarmerId, setSelectedFarmerId] = useState('');
+
+  // 1. Catalog Mode State
   const [selectedProductId, setSelectedProductId] = useState('');
   const [goodsQty, setGoodsQty] = useState('');
   const [goodsRate, setGoodsRate] = useState('');
+
+  // 2. Custom Item / Loose Feed Mode State
+  const [customItemName, setCustomItemName] = useState('');
+  const [customQty, setCustomQty] = useState('2');
+  const [customUnit, setCustomUnit] = useState('किलो (kg)');
+  const [customRate, setCustomRate] = useState('');
+  const [customDirectAmount, setCustomDirectAmount] = useState('');
+
+  // 3. Cash Loan / Udhari Mode State
+  const [loanAmount, setLoanAmount] = useState('');
+  const [loanReason, setLoanReason] = useState('उधारी / नकद सहायता');
+  const [loanPaymentMode, setLoanPaymentMode] = useState<'CASH' | 'UPI' | 'BANK_TRANSFER'>('CASH');
+
+  // 4. Misc Adjustment Mode State
+  const [adjAmount, setAdjAmount] = useState('');
+  const [adjReason, setAdjReason] = useState('');
+
+  // Common Goods / Debit fields
   const [goodsDate, setGoodsDate] = useState(new Date().toISOString().split('T')[0]);
   const [goodsTime, setGoodsTime] = useState(
     new Date().toTimeString().split(' ')[0].substring(0, 5)
@@ -87,10 +113,23 @@ export const AdminKhatabookPage: React.FC = () => {
   const [goodsSubmitting, setGoodsSubmitting] = useState(false);
   const [goodsError, setGoodsError] = useState('');
 
-  // Modal 2: Payment Received (जमा लिया / Dues Clear)
+  // Modal 2: Payment Received / Chicken Lifting / Discount / Credit Adj
   const [paymentModalOpen, setPaymentModalOpen] = useState(false);
+  const [creditType, setCreditType] = useState<'PAYMENT' | 'BIRD_SALE' | 'DISCOUNT' | 'ADJUSTMENT_CREDIT'>('PAYMENT');
+  
+  // 1. Payment Mode State
   const [paymentAmount, setPaymentAmount] = useState('');
+  const [paymentReason, setPaymentReason] = useState('पुराने बकाया का भुगतान / खाता हिसाब');
   const [paymentMode, setPaymentMode] = useState<'CASH' | 'UPI' | 'BANK_TRANSFER' | 'CHEQUE'>('CASH');
+
+  // 2. Chicken Lifting / Bird Purchase Mode State
+  const [birdCount, setBirdCount] = useState('');
+  const [birdTotalKg, setBirdTotalKg] = useState('');
+  const [birdRate, setBirdRate] = useState('');
+  const [birdDirectAmount, setBirdDirectAmount] = useState('');
+  const [birdReason, setBirdReason] = useState('बड़ा मुर्गा उठाया / फार्म से लिफ्टिंग');
+
+  // Common Credit fields
   const [paymentDate, setPaymentDate] = useState(new Date().toISOString().split('T')[0]);
   const [paymentTime, setPaymentTime] = useState(
     new Date().toTimeString().split(' ')[0].substring(0, 5)
@@ -132,8 +171,9 @@ export const AdminKhatabookPage: React.FC = () => {
     loadKhatabook();
   }, [search, filterType]);
 
-  // Open Issue Goods Modal
-  const handleOpenIssueGoods = (farmerId?: string) => {
+  // Open Issue Goods / Debit Modal
+  const handleOpenIssueGoods = (farmerId?: string, initialMode: 'CATALOG' | 'CUSTOM_ITEM' | 'LOAN_CASH' | 'ADJUSTMENT' = 'CATALOG') => {
+    setEntryMode(initialMode);
     const defaultFarmer = farmerId || farmerKhatas[0]?.id || '';
     setSelectedFarmerId(defaultFarmer);
     const defaultProd = products[0];
@@ -145,6 +185,16 @@ export const AdminKhatabookPage: React.FC = () => {
       setGoodsRate('');
     }
     setGoodsQty('1');
+    setCustomItemName('');
+    setCustomQty('2');
+    setCustomUnit('किलो (kg)');
+    setCustomRate('');
+    setCustomDirectAmount('');
+    setLoanAmount('');
+    setLoanReason('उधारी / नकद सहायता');
+    setLoanPaymentMode('CASH');
+    setAdjAmount('');
+    setAdjReason('');
     setGoodsDate(new Date().toISOString().split('T')[0]);
     setGoodsTime(new Date().toTimeString().split(' ')[0].substring(0, 5));
     setGoodsNotes('');
@@ -152,8 +202,9 @@ export const AdminKhatabookPage: React.FC = () => {
     setGoodsModalOpen(true);
   };
 
-  // Open Payment Received Modal
-  const handleOpenPayment = (farmerId?: string) => {
+  // Open Payment / Chicken Lifting Received Modal
+  const handleOpenPayment = (farmerId?: string, initialCreditType: 'PAYMENT' | 'BIRD_SALE' | 'DISCOUNT' | 'ADJUSTMENT_CREDIT' = 'PAYMENT') => {
+    setCreditType(initialCreditType);
     const targetFarmer = farmerKhatas.find((f) => f.id === farmerId) || farmerKhatas[0];
     setSelectedFarmerId(targetFarmer?.id || '');
     if (targetFarmer && targetFarmer.balanceSummary.netBalance > 0) {
@@ -161,7 +212,13 @@ export const AdminKhatabookPage: React.FC = () => {
     } else {
       setPaymentAmount('');
     }
+    setPaymentReason('पुराने बकाया का भुगतान / खाता हिसाब');
     setPaymentMode('CASH');
+    setBirdCount('');
+    setBirdTotalKg('');
+    setBirdRate('');
+    setBirdDirectAmount('');
+    setBirdReason('बड़ा मुर्गा उठाया / फार्म से लिफ्टिंग');
     setPaymentDate(new Date().toISOString().split('T')[0]);
     setPaymentTime(new Date().toTimeString().split(' ')[0].substring(0, 5));
     setPaymentNotes('');
@@ -178,40 +235,98 @@ export const AdminKhatabookPage: React.FC = () => {
     }
   };
 
-  // Submit Goods Issue (सामान दिया)
+  // Submit Goods / Debit Entry (सामान दिया / उधारी / नामे)
   const handleSaveIssueGoods = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!selectedFarmerId) {
       setGoodsError(isHindi ? 'कृपया किसान चुनें।' : 'Please select a farmer.');
       return;
     }
-    const qty = Number(goodsQty);
-    const rate = Number(goodsRate);
-    if (!qty || qty <= 0 || !rate || rate <= 0) {
-      setGoodsError(isHindi ? 'कृपया वैध मात्रा और रेट दर्ज करें।' : 'Please enter valid quantity and rate.');
-      return;
-    }
-
-    const selectedProduct = products.find((p) => p._id === selectedProductId);
-    const totalAmount = qty * rate;
-
-    setGoodsSubmitting(true);
     setGoodsError('');
-    try {
-      const res = await api.post('/ledger/transaction', {
-        farmerId: selectedFarmerId,
-        transactionDate: goodsDate,
-        transactionTime: goodsTime,
+
+    let payload: any = {
+      farmerId: selectedFarmerId,
+      transactionDate: goodsDate,
+      transactionTime: goodsTime,
+      notes: goodsNotes
+    };
+
+    if (entryMode === 'CATALOG') {
+      const qty = Number(goodsQty);
+      const rate = Number(goodsRate);
+      if (!qty || qty <= 0 || !rate || rate <= 0) {
+        setGoodsError(isHindi ? 'कृपया वैध मात्रा और रेट दर्ज करें।' : 'Please enter valid quantity and rate.');
+        return;
+      }
+      const selectedProduct = products.find((p) => p._id === selectedProductId);
+      payload = {
+        ...payload,
         transactionType: 'PRODUCT_PURCHASE',
         productId: selectedProduct?._id,
         productName: selectedProduct?.name || 'Goods Issue',
         quantity: qty,
         unit: selectedProduct?.unit || 'Units',
         rate: rate,
-        amount: totalAmount,
-        notes: goodsNotes
-      });
+        amount: qty * rate
+      };
+    } else if (entryMode === 'CUSTOM_ITEM') {
+      if (!customItemName.trim()) {
+        setGoodsError(isHindi ? 'कृपया सामान / दाना का नाम दर्ज करें (उदा. 2 किलो दाना)।' : 'Please enter item description.');
+        return;
+      }
+      const qty = Number(customQty);
+      const rate = Number(customRate);
+      let amt = customDirectAmount ? Number(customDirectAmount) : (qty && rate ? qty * rate : 0);
+      if (!amt || amt <= 0) {
+        setGoodsError(isHindi ? 'कृपया वैध मात्रा और रेट (या कुल राशि) दर्ज करें।' : 'Please enter valid quantity & rate (or total amount).');
+        return;
+      }
+      const desc = `${customItemName.trim()}${qty && rate ? ` (${qty} ${customUnit} @ ₹${rate})` : ''}`;
+      payload = {
+        ...payload,
+        transactionType: 'PRODUCT_PURCHASE',
+        productName: customItemName.trim(),
+        description: desc,
+        descriptionHi: desc,
+        quantity: qty > 0 ? qty : undefined,
+        unit: customUnit,
+        rate: rate > 0 ? rate : undefined,
+        amount: amt
+      };
+    } else if (entryMode === 'LOAN_CASH') {
+      const amt = Number(loanAmount);
+      if (!amt || amt <= 0) {
+        setGoodsError(isHindi ? 'कृपया वैध उधारी राशि दर्ज करें।' : 'Please enter valid loan amount.');
+        return;
+      }
+      const desc = loanReason.trim() ? `उधारी / नकद दिया: ${loanReason.trim()}` : 'उधारी / नकद सहायता';
+      payload = {
+        ...payload,
+        transactionType: 'ADJUSTMENT_DEBIT',
+        description: desc,
+        descriptionHi: desc,
+        paymentMode: loanPaymentMode,
+        amount: amt
+      };
+    } else if (entryMode === 'ADJUSTMENT') {
+      const amt = Number(adjAmount);
+      if (!amt || amt <= 0) {
+        setGoodsError(isHindi ? 'कृपया समायोजन राशि दर्ज करें।' : 'Please enter valid adjustment amount.');
+        return;
+      }
+      const desc = adjReason.trim() ? `खाता नामे: ${adjReason.trim()}` : 'खाता समायोजन (नामे)';
+      payload = {
+        ...payload,
+        transactionType: 'ADJUSTMENT_DEBIT',
+        description: desc,
+        descriptionHi: desc,
+        amount: amt
+      };
+    }
 
+    setGoodsSubmitting(true);
+    try {
+      const res = await api.post('/ledger/transaction', payload);
       if (res.data.success) {
         setGoodsModalOpen(false);
         loadKhatabook();
@@ -223,29 +338,81 @@ export const AdminKhatabookPage: React.FC = () => {
     }
   };
 
-  // Submit Payment Received (जमा लिया / Clear Dues)
+  // Submit Payment Received (जमा लिया / बड़ा मुर्गा उठाया / Discount / Clear Dues)
   const handleSavePayment = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!selectedFarmerId) {
       setPaymentError(isHindi ? 'कृपया किसान चुनें।' : 'Please select a farmer.');
       return;
     }
-    const amount = Number(paymentAmount);
-    if (!amount || amount <= 0) {
-      setPaymentError(isHindi ? 'कृपया वैध जमा राशि दर्ज करें।' : 'Please enter a valid payment amount.');
-      return;
+    setPaymentError('');
+
+    let txType = 'PAYMENT_RECEIVED';
+    let desc: string | undefined = undefined;
+    let descHi: string | undefined = undefined;
+    let finalAmount = Number(paymentAmount);
+    let qty: number | undefined = undefined;
+    let unit: string | undefined = undefined;
+    let rate: number | undefined = undefined;
+
+    if (creditType === 'PAYMENT') {
+      if (!finalAmount || finalAmount <= 0) {
+        setPaymentError(isHindi ? 'कृपया वैध जमा राशि दर्ज करें।' : 'Please enter a valid payment amount.');
+        return;
+      }
+      desc = paymentReason.trim() ? `भुगतान जमा: ${paymentReason.trim()}` : 'नकद / ऑनलाइन भुगतान जमा';
+      descHi = desc;
+    } else if (creditType === 'BIRD_SALE') {
+      const totalKg = Number(birdTotalKg);
+      const birdRt = Number(birdRate);
+      const count = Number(birdCount);
+      finalAmount = birdDirectAmount ? Number(birdDirectAmount) : (totalKg && birdRt ? totalKg * birdRt : 0);
+
+      if (!finalAmount || finalAmount <= 0) {
+        setPaymentError(isHindi ? 'कृपया वैध कुल वजन और भाव (या कुल राशि) दर्ज करें।' : 'Please enter valid bird weight and rate (or direct total).');
+        return;
+      }
+
+      txType = 'BIRD_SALE_CREDIT';
+      qty = totalKg > 0 ? totalKg : undefined;
+      unit = 'KG';
+      rate = birdRt > 0 ? birdRt : undefined;
+
+      const birdDetail = `${count > 0 ? `${count} पीस, ` : ''}${totalKg > 0 ? `${totalKg} किग्रा @ ₹${birdRt}/किग्रा` : ''}`;
+      desc = `बड़ा मुर्गा उठाया/बिक्री: ${birdDetail}${birdReason.trim() ? ` (${birdReason.trim()})` : ''}`;
+      descHi = desc;
+    } else if (creditType === 'DISCOUNT') {
+      if (!finalAmount || finalAmount <= 0) {
+        setPaymentError(isHindi ? 'कृपया वैध छूट राशि दर्ज करें।' : 'Please enter a valid discount amount.');
+        return;
+      }
+      txType = 'DISCOUNT';
+      desc = paymentNotes.trim() ? `विशेष छूट: ${paymentNotes.trim()}` : 'विशेष छूट / डिस्काउंट';
+      descHi = desc;
+    } else if (creditType === 'ADJUSTMENT_CREDIT') {
+      if (!finalAmount || finalAmount <= 0) {
+        setPaymentError(isHindi ? 'कृपया वैध समायोजन राशि दर्ज करें।' : 'Please enter a valid credit amount.');
+        return;
+      }
+      txType = 'ADJUSTMENT_CREDIT';
+      desc = paymentNotes.trim() ? `खाता समायोजन (जमा): ${paymentNotes.trim()}` : 'खाता समायोजन (जमा)';
+      descHi = desc;
     }
 
     setPaymentSubmitting(true);
-    setPaymentError('');
     try {
       const res = await api.post('/ledger/transaction', {
         farmerId: selectedFarmerId,
         transactionDate: paymentDate,
         transactionTime: paymentTime,
-        transactionType: 'PAYMENT_RECEIVED',
-        paymentMode: paymentMode,
-        amount: amount,
+        transactionType: txType,
+        paymentMode: creditType === 'PAYMENT' ? paymentMode : undefined,
+        quantity: qty,
+        unit: unit,
+        rate: rate,
+        amount: finalAmount,
+        description: desc,
+        descriptionHi: descHi,
         notes: paymentNotes
       });
 
@@ -279,7 +446,8 @@ export const AdminKhatabookPage: React.FC = () => {
     }
   };
 
-  const handleSendWhatsAppReminder = (farmer: FarmerKhata) => {
+  // Quick Action: Send WhatsApp reminder
+  const handleSendWhatsApp = (farmer: FarmerKhata) => {
     const isDue = farmer.balanceSummary.netBalance > 0;
     const balanceText = isDue
       ? `बकाया राशि: ₹${farmer.balanceSummary.amountDue}`
@@ -288,11 +456,11 @@ export const AdminKhatabookPage: React.FC = () => {
     const text = encodeURIComponent(
       `*बंशीधर पोल्ट्री खाताबही विवरण*\n` +
       `नमस्ते ${farmer.name} जी,\n` +
-      `किसान आईडी: ${farmer.farmerId}\n` +
-      `आपका वर्तमान खाता स्थिति: *${balanceText}*\n` +
+      `किसान कोड: ${farmer.farmerId}\n` +
+      `खाता स्थिति: *${balanceText}*\n` +
       `कुल खरीद (नामे): ₹${farmer.balanceSummary.totalDebit}\n` +
       `कुल जमा (भुगतान): ₹${farmer.balanceSummary.totalCredit}\n\n` +
-      `डिजिटल पासबुक देखने के लिए लॉगिन करें: ${window.location.origin}/farmer/login\n` +
+      `डिजिटल पासबुक देखें: ${window.location.origin}/farmer/login\n` +
       `धन्यवाद, बंशीधर पोल्ट्री`
     );
 
@@ -301,14 +469,15 @@ export const AdminKhatabookPage: React.FC = () => {
     window.open(`https://wa.me/${phoneWithCountry}?text=${text}`, '_blank');
   };
 
-  const handleDownloadFarmerPDF = async (farmerId: string, farmerCode: string) => {
+  // Download PDF Statement
+  const handleDownloadPDF = async (farmerId: string, farmerCode: string) => {
     try {
       const res = await api.get(`/ledger/farmer/${farmerId}/pdf`, { responseType: 'blob' });
       const blob = new Blob([res.data], { type: 'application/pdf' });
-      const url = window.URL.createObjectURL(blob);
+      const downloadUrl = window.URL.createObjectURL(blob);
       const link = document.createElement('a');
-      link.href = url;
-      link.download = `Khatabook_Statement_${farmerCode}_${new Date().toISOString().split('T')[0]}.pdf`;
+      link.href = downloadUrl;
+      link.download = `Statement_${farmerCode}_${new Date().toISOString().split('T')[0]}.pdf`;
       document.body.appendChild(link);
       link.click();
       link.remove();
@@ -319,7 +488,16 @@ export const AdminKhatabookPage: React.FC = () => {
 
   const selectedFarmerForGoods = farmerKhatas.find((f) => f.id === selectedFarmerId);
   const selectedFarmerForPayment = farmerKhatas.find((f) => f.id === selectedFarmerId);
-  const calculatedGoodsTotal = Number(goodsQty || 0) * Number(goodsRate || 0);
+  const calculatedDebitTotal =
+    entryMode === 'CATALOG'
+      ? Number(goodsQty || 0) * Number(goodsRate || 0)
+      : entryMode === 'CUSTOM_ITEM'
+      ? customDirectAmount
+        ? Number(customDirectAmount || 0)
+        : Number(customQty || 0) * Number(customRate || 0)
+      : entryMode === 'LOAN_CASH'
+      ? Number(loanAmount || 0)
+      : Number(adjAmount || 0);
 
   return (
     <div className="space-y-6">
@@ -334,8 +512,8 @@ export const AdminKhatabookPage: React.FC = () => {
           </div>
           <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
             {isHindi
-              ? 'किसान को सामान देने (ऑटोमैटिक रेट/हिसाब), जमा भुगतान दर्ज करने और बकाया चुकता करने का डिजिटल लेजर'
-              : 'Product-based goods billing, automated price calculation, payment entries, and dues clearance'}
+              ? 'किसान को सामान / खुला दाना देने, उधारी नकद दर्ज करने, जमा भुगतान और हिसाब चुकता करने का डिजिटल लेजर'
+              : 'Product-based goods billing, custom loose feed, cash loan/udhari entries, and payment clearance'}
           </p>
         </div>
 
@@ -619,7 +797,7 @@ export const AdminKhatabookPage: React.FC = () => {
 
                     {/* Download PDF */}
                     <button
-                      onClick={() => handleDownloadFarmerPDF(khata.id, khata.farmerId)}
+                      onClick={() => handleDownloadPDF(khata.id, khata.farmerId)}
                       className="flex items-center justify-center gap-1 py-2 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 font-bold text-xs rounded-xl transition-all"
                       title="Download PDF Statement"
                     >
@@ -657,7 +835,10 @@ export const AdminKhatabookPage: React.FC = () => {
                       <p className="font-bold text-slate-900 dark:text-white">{tx.farmerName}</p>
                     </td>
                     <td className="p-3.5">
-                      <p className="font-bold text-slate-800 dark:text-slate-200">{tx.description}</p>
+                      <p className="font-bold text-slate-800 dark:text-slate-200">
+                        {isHindi && tx.descriptionHi ? tx.descriptionHi : tx.description}
+                      </p>
+                      {tx.notes && <p className="text-[10px] text-slate-400 mt-0.5">{tx.notes}</p>}
                       {tx.paymentMode && (
                         <span className="inline-block mt-0.5 px-2 py-0.5 rounded bg-emerald-50 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300 text-[10px] font-bold">
                           {tx.paymentMode}
@@ -693,7 +874,7 @@ export const AdminKhatabookPage: React.FC = () => {
         </div>
       )}
 
-      {/* MODAL 1: Issue Goods (सामान दिया - Auto Price Calculation) */}
+      {/* MODAL 1: Debit / Goods / Loose Feed / Udhari Entry (नामे प्रविष्टि) */}
       {goodsModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-sm overflow-y-auto">
           <div className="w-full max-w-lg bg-white dark:bg-slate-900 rounded-3xl p-6 sm:p-8 border border-slate-200 dark:border-slate-800 shadow-2xl space-y-4 my-8">
@@ -701,11 +882,66 @@ export const AdminKhatabookPage: React.FC = () => {
               <div className="flex items-center gap-2">
                 <Package className="w-5 h-5 text-brand-600" />
                 <h3 className="text-base font-bold text-slate-900 dark:text-white">
-                  {isHindi ? 'किसान को सामान दिया (Issue Goods Entry)' : 'Issue Goods / Product Delivery'}
+                  {isHindi ? 'किसान के खाते में नामे / उधारी (Debit Entry)' : 'Issue Goods / Add Debit Entry'}
                 </h3>
               </div>
               <button onClick={() => setGoodsModalOpen(false)} className="p-1.5 text-slate-400 hover:text-slate-600 rounded-xl">
                 <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Entry Mode Tabs */}
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-1.5 p-1.5 bg-slate-100 dark:bg-slate-950 rounded-2xl">
+              <button
+                type="button"
+                onClick={() => setEntryMode('CATALOG')}
+                className={`py-2 px-2 rounded-xl text-[11px] font-extrabold transition-all flex flex-col items-center gap-1 ${
+                  entryMode === 'CATALOG'
+                    ? 'bg-brand-600 text-white shadow-md'
+                    : 'text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-800'
+                }`}
+              >
+                <Package className="w-3.5 h-3.5" />
+                <span>{isHindi ? 'कैटलॉग सामान' : 'Catalog'}</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setEntryMode('CUSTOM_ITEM')}
+                className={`py-2 px-2 rounded-xl text-[11px] font-extrabold transition-all flex flex-col items-center gap-1 ${
+                  entryMode === 'CUSTOM_ITEM'
+                    ? 'bg-amber-600 text-white shadow-md'
+                    : 'text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-800'
+                }`}
+              >
+                <Wheat className="w-3.5 h-3.5" />
+                <span>{isHindi ? 'खुला दाना / सामान' : 'Loose / Custom'}</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setEntryMode('LOAN_CASH')}
+                className={`py-2 px-2 rounded-xl text-[11px] font-extrabold transition-all flex flex-col items-center gap-1 ${
+                  entryMode === 'LOAN_CASH'
+                    ? 'bg-red-600 text-white shadow-md'
+                    : 'text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-800'
+                }`}
+              >
+                <Banknote className="w-3.5 h-3.5" />
+                <span>{isHindi ? 'उधारी / नकद' : 'Cash Loan'}</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setEntryMode('ADJUSTMENT')}
+                className={`py-2 px-2 rounded-xl text-[11px] font-extrabold transition-all flex flex-col items-center gap-1 ${
+                  entryMode === 'ADJUSTMENT'
+                    ? 'bg-purple-600 text-white shadow-md'
+                    : 'text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-800'
+                }`}
+              >
+                <Scale className="w-3.5 h-3.5" />
+                <span>{isHindi ? 'अन्य नामे' : 'Adjustment'}</span>
               </button>
             </div>
 
@@ -737,73 +973,263 @@ export const AdminKhatabookPage: React.FC = () => {
                 </select>
               </div>
 
-              {/* Select Product */}
-              <div>
-                <label className="block font-bold text-slate-700 dark:text-slate-300 mb-1">
-                  {isHindi ? 'उत्पाद / सामान चुनें (Product Dropdown) *' : 'Select Product *'}
-                </label>
-                <select
-                  required
-                  value={selectedProductId}
-                  onChange={(e) => handleProductChange(e.target.value)}
-                  className="w-full p-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-white font-bold"
-                >
-                  <option value="">{isHindi ? '-- उत्पाद चुनें --' : '-- Select Product --'}</option>
-                  {products.map((p) => (
-                    <option key={p._id} value={p._id}>
-                      {p.name} {p.nameHi ? `(${p.nameHi})` : ''} - ₹{p.price}/{p.unit}
-                    </option>
-                  ))}
-                </select>
-              </div>
+              {/* TAB 1: CATALOG PRODUCT */}
+              {entryMode === 'CATALOG' && (
+                <div className="space-y-3">
+                  <div>
+                    <label className="block font-bold text-slate-700 dark:text-slate-300 mb-1">
+                      {isHindi ? 'उत्पाद / सामान चुनें (Product Dropdown) *' : 'Select Product *'}
+                    </label>
+                    <select
+                      required
+                      value={selectedProductId}
+                      onChange={(e) => handleProductChange(e.target.value)}
+                      className="w-full p-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-white font-bold"
+                    >
+                      <option value="">{isHindi ? '-- उत्पाद चुनें --' : '-- Select Product --'}</option>
+                      {products.map((p) => (
+                        <option key={p._id} value={p._id}>
+                          {p.name} {p.nameHi ? `(${p.nameHi})` : ''} - ₹{p.price}/{p.unit}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
 
-              {/* Quantity and Rate */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <div>
-                  <label className="block font-bold text-slate-700 dark:text-slate-300 mb-1">
-                    {isHindi ? 'मात्रा (Quantity / बोरी/किलो) *' : 'Quantity *'}
-                  </label>
-                  <input
-                    type="number"
-                    step="any"
-                    required
-                    min="0.1"
-                    placeholder="e.g. 10"
-                    value={goodsQty}
-                    onChange={(e) => setGoodsQty(e.target.value)}
-                    className="w-full p-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-white font-black text-sm"
-                  />
-                </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                      <label className="block font-bold text-slate-700 dark:text-slate-300 mb-1">
+                        {isHindi ? 'मात्रा (Quantity / बोरी/किलो) *' : 'Quantity *'}
+                      </label>
+                      <input
+                        type="number"
+                        step="any"
+                        required
+                        min="0.1"
+                        placeholder="e.g. 10"
+                        value={goodsQty}
+                        onChange={(e) => setGoodsQty(e.target.value)}
+                        className="w-full p-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-white font-black text-sm"
+                      />
+                    </div>
 
-                <div>
-                  <label className="block font-bold text-slate-700 dark:text-slate-300 mb-1">
-                    {isHindi ? 'भाव / रेट (Rate per Unit ₹) *' : 'Rate (₹) *'}
-                  </label>
-                  <input
-                    type="number"
-                    step="any"
-                    required
-                    min="0"
-                    placeholder="e.g. 2200"
-                    value={goodsRate}
-                    onChange={(e) => setGoodsRate(e.target.value)}
-                    className="w-full p-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-white font-black text-sm"
-                  />
+                    <div>
+                      <label className="block font-bold text-slate-700 dark:text-slate-300 mb-1">
+                        {isHindi ? 'भाव / रेट (Rate per Unit ₹) *' : 'Rate (₹) *'}
+                      </label>
+                      <input
+                        type="number"
+                        step="any"
+                        required
+                        min="0"
+                        placeholder="e.g. 2200"
+                        value={goodsRate}
+                        onChange={(e) => setGoodsRate(e.target.value)}
+                        className="w-full p-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-white font-black text-sm"
+                      />
+                    </div>
+                  </div>
                 </div>
-              </div>
+              )}
+
+              {/* TAB 2: CUSTOM ITEM / LOOSE FEED */}
+              {entryMode === 'CUSTOM_ITEM' && (
+                <div className="space-y-3">
+                  <div>
+                    <label className="block font-bold text-slate-700 dark:text-slate-300 mb-1">
+                      {isHindi ? 'सामान / दाना का नाम (Item Description) *' : 'Item Description *'}
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      placeholder={isHindi ? 'उदा. 2 किलो दाना, खुला मक्का दाना, दवाई या सप्लीमेंट' : 'e.g. 2 KG Starter Feed, Loose Corn, Medicine'}
+                      value={customItemName}
+                      onChange={(e) => setCustomItemName(e.target.value)}
+                      className="w-full p-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-white font-bold"
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                    <div>
+                      <label className="block font-bold text-slate-700 dark:text-slate-300 mb-1">
+                        {isHindi ? 'मात्रा (Quantity) *' : 'Quantity *'}
+                      </label>
+                      <input
+                        type="number"
+                        step="any"
+                        required
+                        min="0.1"
+                        placeholder="2"
+                        value={customQty}
+                        onChange={(e) => setCustomQty(e.target.value)}
+                        className="w-full p-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-white font-black"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block font-bold text-slate-700 dark:text-slate-300 mb-1">
+                        {isHindi ? 'इकाई (Unit) *' : 'Unit *'}
+                      </label>
+                      <select
+                        value={customUnit}
+                        onChange={(e) => setCustomUnit(e.target.value)}
+                        className="w-full p-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-white font-bold"
+                      >
+                        <option value="किलो (kg)">किलो (KG)</option>
+                        <option value="बोरी (Bag)">बोरी (Bag)</option>
+                        <option value="पीस (Pcs)">पीस (Pcs)</option>
+                        <option value="लीटर (Ltr)">लीटर (Litre)</option>
+                        <option value="पैकेट (Pkt)">पैकेट (Pkt)</option>
+                        <option value="शीशी/डोज़">शीशी/डोज़</option>
+                      </select>
+                    </div>
+
+                    <div>
+                      <label className="block font-bold text-slate-700 dark:text-slate-300 mb-1">
+                        {isHindi ? 'रेट (Rate ₹) *' : 'Rate (₹) *'}
+                      </label>
+                      <input
+                        type="number"
+                        step="any"
+                        required
+                        min="0"
+                        placeholder="e.g. 40"
+                        value={customRate}
+                        onChange={(e) => setCustomRate(e.target.value)}
+                        className="w-full p-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-white font-black"
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block font-bold text-slate-700 dark:text-slate-300 mb-1">
+                      {isHindi ? 'डायरेक्ट कुल राशि (वैकल्पिक / यदि सीधे तय हो)' : 'Direct Amount ₹ (Optional Override)'}
+                    </label>
+                    <input
+                      type="number"
+                      step="any"
+                      min="1"
+                      placeholder={isHindi ? 'खाली छोड़ें यदि मात्रा × रेट इस्तेमाल करना है' : 'Leave blank if using Qty × Rate'}
+                      value={customDirectAmount}
+                      onChange={(e) => setCustomDirectAmount(e.target.value)}
+                      className="w-full p-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-white font-bold"
+                    />
+                  </div>
+                </div>
+              )}
+
+              {/* TAB 3: CASH LOAN / UDHARI */}
+              {entryMode === 'LOAN_CASH' && (
+                <div className="space-y-3">
+                  <div className="p-3 bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-900/60 rounded-2xl text-[11px] text-red-800 dark:text-red-300">
+                    {isHindi
+                      ? '💡 किसान को दिए गए नकद रुपये या उधारी को यहाँ दर्ज करें। यह राशि सीधे किसान के खाते में नामे (बकाया) हो जाएगी।'
+                      : 'Record cash loans or ad-hoc cash given to farmer. This will be added to farmer dues.'}
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                      <label className="block font-bold text-slate-700 dark:text-slate-300 mb-1">
+                        {isHindi ? 'उधारी राशि (Loan Amount ₹) *' : 'Loan Amount (₹) *'}
+                      </label>
+                      <input
+                        type="number"
+                        step="any"
+                        required
+                        min="1"
+                        placeholder="e.g. 5000"
+                        value={loanAmount}
+                        onChange={(e) => setLoanAmount(e.target.value)}
+                        className="w-full p-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-white font-black text-sm text-red-600"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block font-bold text-slate-700 dark:text-slate-300 mb-1">
+                        {isHindi ? 'माध्यम (Payment Mode) *' : 'Mode *'}
+                      </label>
+                      <select
+                        value={loanPaymentMode}
+                        onChange={(e) => setLoanPaymentMode(e.target.value as any)}
+                        className="w-full p-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-white font-bold"
+                      >
+                        <option value="CASH">{isHindi ? '💵 नकद (Cash)' : 'Cash'}</option>
+                        <option value="UPI">{isHindi ? '📱 UPI / PhonePe' : 'UPI'}</option>
+                        <option value="BANK_TRANSFER">{isHindi ? '🏦 बैंक ट्रांसफर' : 'Bank Transfer'}</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block font-bold text-slate-700 dark:text-slate-300 mb-1">
+                      {isHindi ? 'उधारी का कारण / विवरण (Reason) *' : 'Loan Reason / Purpose *'}
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      placeholder={isHindi ? 'उदा. काम के लिए नकद, लेबर खर्च, ट्रैक्टर भाड़ा, निजी उधारी' : 'e.g. Labour cash, Tractor fare, Emergency loan'}
+                      value={loanReason}
+                      onChange={(e) => setLoanReason(e.target.value)}
+                      className="w-full p-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-white font-bold"
+                    />
+                  </div>
+                </div>
+              )}
+
+              {/* TAB 4: MISC ADJUSTMENT */}
+              {entryMode === 'ADJUSTMENT' && (
+                <div className="space-y-3">
+                  <div>
+                    <label className="block font-bold text-slate-700 dark:text-slate-300 mb-1">
+                      {isHindi ? 'समायोजन राशि (Adjustment Amount ₹) *' : 'Amount (₹) *'}
+                    </label>
+                    <input
+                      type="number"
+                      step="any"
+                      required
+                      min="1"
+                      placeholder="e.g. 500"
+                      value={adjAmount}
+                      onChange={(e) => setAdjAmount(e.target.value)}
+                      className="w-full p-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-white font-black text-sm text-purple-600"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block font-bold text-slate-700 dark:text-slate-300 mb-1">
+                      {isHindi ? 'समायोजन कारण (Reason) *' : 'Reason / Note *'}
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      placeholder={isHindi ? 'उदा. परिवहन भाड़ा, पुराना बकाया समायोजन, पेनल्टी' : 'e.g. Freight charge, Previous balance sync'}
+                      value={adjReason}
+                      onChange={(e) => setAdjReason(e.target.value)}
+                      className="w-full p-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-white font-bold"
+                    />
+                  </div>
+                </div>
+              )}
 
               {/* Automatic Total Price Calculation Highlight */}
               <div className="p-4 rounded-2xl bg-brand-50 dark:bg-brand-950/60 border border-brand-200 dark:border-brand-800 flex items-center justify-between">
                 <div>
                   <span className="text-[11px] font-bold text-brand-800 dark:text-brand-300 block">
-                    {isHindi ? 'कुल राशि (Auto-Calculated Total):' : 'Calculated Total Amount:'}
+                    {isHindi ? 'कुल नामे राशि (Debit Total):' : 'Total Debit Amount:'}
                   </span>
                   <span className="text-[10px] text-slate-500 dark:text-slate-400">
-                    {goodsQty || 0} × ₹{goodsRate || 0}
+                    {entryMode === 'CATALOG'
+                      ? `${goodsQty || 0} × ₹${goodsRate || 0}`
+                      : entryMode === 'CUSTOM_ITEM'
+                      ? customDirectAmount
+                        ? 'Direct Total'
+                        : `${customQty || 0} ${customUnit} × ₹${customRate || 0}`
+                      : isHindi
+                      ? 'सीधे खाते में नामे'
+                      : 'Direct Debit to Account'}
                   </span>
                 </div>
                 <span className="text-xl sm:text-2xl font-black font-display text-brand-700 dark:text-brand-300">
-                  {formatINR(calculatedGoodsTotal)}
+                  {formatINR(calculatedDebitTotal)}
                 </span>
               </div>
 
@@ -843,7 +1269,7 @@ export const AdminKhatabookPage: React.FC = () => {
                 </label>
                 <input
                   type="text"
-                  placeholder="उदा. गाड़ी नंबर या चालान पर्ची"
+                  placeholder={isHindi ? 'उदा. गाड़ी नंबर, चालान पर्ची या निजी रिमार्क' : 'e.g. Slip #, vehicle no, remarks'}
                   value={goodsNotes}
                   onChange={(e) => setGoodsNotes(e.target.value)}
                   className="w-full p-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-white"
@@ -868,7 +1294,7 @@ export const AdminKhatabookPage: React.FC = () => {
                       ? 'खाते में दर्ज कर रहे हैं...'
                       : 'Posting...'
                     : isHindi
-                    ? 'सामान एंट्री दर्ज करें (Save & Debit)'
+                    ? 'नामे एंट्री दर्ज करें (Save & Debit)'
                     : 'Save & Post Entry'}
                 </button>
               </div>
@@ -877,7 +1303,7 @@ export const AdminKhatabookPage: React.FC = () => {
         </div>
       )}
 
-      {/* MODAL 2: Payment Received / Dues Clear (जमा लिया) */}
+      {/* MODAL 2: Payment Received / Special Discount / Credit (जमा लिया) */}
       {paymentModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-sm overflow-y-auto">
           <div className="w-full max-w-lg bg-white dark:bg-slate-900 rounded-3xl p-6 sm:p-8 border border-slate-200 dark:border-slate-800 shadow-2xl space-y-4 my-8">
@@ -885,11 +1311,66 @@ export const AdminKhatabookPage: React.FC = () => {
               <div className="flex items-center gap-2">
                 <Receipt className="w-5 h-5 text-emerald-600" />
                 <h3 className="text-base font-bold text-slate-900 dark:text-white">
-                  {isHindi ? 'किसान से भुगतान प्राप्त (Dues Clear / Payment Entry)' : 'Payment Collection / Clear Dues'}
+                  {isHindi ? 'किसान से जमा / भुगतान (Credit Entry)' : 'Payment Collection / Credit Entry'}
                 </h3>
               </div>
               <button onClick={() => setPaymentModalOpen(false)} className="p-1.5 text-slate-400 hover:text-slate-600 rounded-xl">
                 <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Credit Type Selector */}
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-1.5 p-1.5 bg-slate-100 dark:bg-slate-950 rounded-2xl">
+              <button
+                type="button"
+                onClick={() => setCreditType('PAYMENT')}
+                className={`py-2 px-2 rounded-xl text-[11px] font-extrabold transition-all flex flex-col items-center gap-1 ${
+                  creditType === 'PAYMENT'
+                    ? 'bg-emerald-600 text-white shadow-md'
+                    : 'text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-800'
+                }`}
+              >
+                <Coins className="w-3.5 h-3.5" />
+                <span>{isHindi ? 'भुगतान प्राप्त' : 'Payment'}</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setCreditType('BIRD_SALE')}
+                className={`py-2 px-2 rounded-xl text-[11px] font-extrabold transition-all flex flex-col items-center gap-1 ${
+                  creditType === 'BIRD_SALE'
+                    ? 'bg-blue-600 text-white shadow-md'
+                    : 'text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-800'
+                }`}
+              >
+                <Wheat className="w-3.5 h-3.5" />
+                <span>{isHindi ? 'बड़ा मुर्गा उठाया' : 'Bird Lifting'}</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setCreditType('DISCOUNT')}
+                className={`py-2 px-2 rounded-xl text-[11px] font-extrabold transition-all flex flex-col items-center gap-1 ${
+                  creditType === 'DISCOUNT'
+                    ? 'bg-amber-600 text-white shadow-md'
+                    : 'text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-800'
+                }`}
+              >
+                <Gift className="w-3.5 h-3.5" />
+                <span>{isHindi ? 'विशेष छूट' : 'Discount'}</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setCreditType('ADJUSTMENT_CREDIT')}
+                className={`py-2 px-2 rounded-xl text-[11px] font-extrabold transition-all flex flex-col items-center gap-1 ${
+                  creditType === 'ADJUSTMENT_CREDIT'
+                    ? 'bg-purple-600 text-white shadow-md'
+                    : 'text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-800'
+                }`}
+              >
+                <Scale className="w-3.5 h-3.5" />
+                <span>{isHindi ? 'जमा समायोजन' : 'Credit Adj'}</span>
               </button>
             </div>
 
@@ -928,67 +1409,243 @@ export const AdminKhatabookPage: React.FC = () => {
                 </select>
               </div>
 
-              {/* Current Dues Display & Quick Fill */}
-              {selectedFarmerForPayment && (
-                <div className="p-3 rounded-2xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 flex items-center justify-between">
-                  <div>
-                    <span className="text-[10px] text-slate-500 dark:text-slate-400 block">
-                      {isHindi ? 'वर्तमान खाता स्थिति:' : 'Current Due Balance:'}
-                    </span>
-                    <span className={`text-base font-black font-display ${selectedFarmerForPayment.balanceSummary.netBalance > 0 ? 'text-red-600' : 'text-emerald-600'}`}>
-                      {selectedFarmerForPayment.balanceSummary.netBalance > 0
-                        ? `₹${selectedFarmerForPayment.balanceSummary.amountDue} (बकाया)`
-                        : selectedFarmerForPayment.balanceSummary.netBalance < 0
-                        ? `₹${selectedFarmerForPayment.balanceSummary.advanceAmount} (एडवांस)`
-                        : '₹0 (चुकता)'}
-                    </span>
+              {/* TAB 1: PAYMENT RECEIVED */}
+              {creditType === 'PAYMENT' && (
+                <div className="space-y-3">
+                  {/* Current Dues Display & Quick Fill */}
+                  {selectedFarmerForPayment && (
+                    <div className="p-3 rounded-2xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 flex items-center justify-between">
+                      <div>
+                        <span className="text-[10px] text-slate-500 dark:text-slate-400 block">
+                          {isHindi ? 'वर्तमान बकाया स्थिति:' : 'Current Due Balance:'}
+                        </span>
+                        <span className={`text-base font-black font-display ${selectedFarmerForPayment.balanceSummary.netBalance > 0 ? 'text-red-600' : 'text-emerald-600'}`}>
+                          {selectedFarmerForPayment.balanceSummary.netBalance > 0
+                            ? `₹${selectedFarmerForPayment.balanceSummary.amountDue} (बकाया)`
+                            : selectedFarmerForPayment.balanceSummary.netBalance < 0
+                            ? `₹${selectedFarmerForPayment.balanceSummary.advanceAmount} (एडवांस)`
+                            : '₹0 (चुकता)'}
+                        </span>
+                      </div>
+
+                      {selectedFarmerForPayment.balanceSummary.netBalance > 0 && (
+                        <button
+                          type="button"
+                          onClick={() => setPaymentAmount(String(selectedFarmerForPayment.balanceSummary.amountDue))}
+                          className="px-3 py-1.5 bg-brand-50 hover:bg-brand-100 dark:bg-brand-950/60 text-brand-700 dark:text-brand-300 rounded-xl font-extrabold text-[11px] border border-brand-200 dark:border-brand-800"
+                        >
+                          {isHindi ? '⚡ पूरा बकाया भरें' : '⚡ Fill Full Due'}
+                        </button>
+                      )}
+                    </div>
+                  )}
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                      <label className="block font-bold text-slate-700 dark:text-slate-300 mb-1">
+                        {isHindi ? 'जमा राशि (Amount ₹) *' : 'Amount Received (₹) *'}
+                      </label>
+                      <input
+                        type="number"
+                        step="any"
+                        required
+                        min="1"
+                        placeholder="e.g. 5000"
+                        value={paymentAmount}
+                        onChange={(e) => setPaymentAmount(e.target.value)}
+                        className="w-full p-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-white font-black text-sm text-emerald-600"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block font-bold text-slate-700 dark:text-slate-300 mb-1">
+                        {isHindi ? 'भुगतान माध्यम (Mode) *' : 'Payment Mode *'}
+                      </label>
+                      <select
+                        value={paymentMode}
+                        onChange={(e) => setPaymentMode(e.target.value as any)}
+                        className="w-full p-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-white font-bold"
+                      >
+                        <option value="CASH">{isHindi ? '💵 नकद (Cash)' : 'Cash'}</option>
+                        <option value="UPI">{isHindi ? '📱 PhonePe / GooglePay / UPI' : 'UPI'}</option>
+                        <option value="BANK_TRANSFER">{isHindi ? '🏦 बैंक ट्रांसफर (IMPS/NEFT)' : 'Bank Transfer'}</option>
+                        <option value="CHEQUE">{isHindi ? '📝 चेक (Cheque)' : 'Cheque'}</option>
+                      </select>
+                    </div>
                   </div>
 
-                  {selectedFarmerForPayment.balanceSummary.netBalance > 0 && (
-                    <button
-                      type="button"
-                      onClick={() => setPaymentAmount(String(selectedFarmerForPayment.balanceSummary.amountDue))}
-                      className="px-3 py-1.5 bg-brand-50 hover:bg-brand-100 dark:bg-brand-950/60 text-brand-700 dark:text-brand-300 rounded-xl font-extrabold text-[11px] border border-brand-200 dark:border-brand-800"
-                    >
-                      {isHindi ? '⚡ पूरा बकाया भरें' : '⚡ Fill Full Due'}
-                    </button>
-                  )}
+                  <div>
+                    <label className="block font-bold text-slate-700 dark:text-slate-300 mb-1">
+                      {isHindi ? 'भुगतान का कारण / विवरण (Reason for Dues Payment) *' : 'Reason / Purpose *'}
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      placeholder={isHindi ? 'उदा. पुराना बकाया चुकता किया, महीने का हिसाब, नकद जमा' : 'e.g. Cleared dues, monthly settlement, cash paid'}
+                      value={paymentReason}
+                      onChange={(e) => setPaymentReason(e.target.value)}
+                      className="w-full p-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-white font-bold"
+                    />
+                  </div>
                 </div>
               )}
 
-              {/* Payment Amount & Payment Mode */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <div>
-                  <label className="block font-bold text-slate-700 dark:text-slate-300 mb-1">
-                    {isHindi ? 'जमा राशि (Amount ₹) *' : 'Amount Received (₹) *'}
-                  </label>
-                  <input
-                    type="number"
-                    step="any"
-                    required
-                    min="1"
-                    placeholder="e.g. 5000"
-                    value={paymentAmount}
-                    onChange={(e) => setPaymentAmount(e.target.value)}
-                    className="w-full p-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-white font-black text-sm text-emerald-600"
-                  />
-                </div>
+              {/* TAB 2: CHICKEN LIFTING / BIRD PURCHASE */}
+              {creditType === 'BIRD_SALE' && (
+                <div className="space-y-3">
+                  <div className="p-3 bg-blue-50 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-900/60 rounded-2xl text-[11px] text-blue-800 dark:text-blue-300">
+                    {isHindi
+                      ? '🐔 किसान के फार्म से तैयार बड़ा मुर्गा (लिफ्टिंग) उठाया गया। कुल वजन × भाव का हिसाब किसान के खाते में जमा (Credit) हो जाएगा।'
+                      : 'Record grown broiler birds lifted/bought from farmer farm. Total amount will be credited to farmer khata.'}
+                  </div>
 
-                <div>
-                  <label className="block font-bold text-slate-700 dark:text-slate-300 mb-1">
-                    {isHindi ? 'भुगतान माध्यम (Mode) *' : 'Payment Mode *'}
-                  </label>
-                  <select
-                    value={paymentMode}
-                    onChange={(e) => setPaymentMode(e.target.value as any)}
-                    className="w-full p-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-white font-bold"
-                  >
-                    <option value="CASH">{isHindi ? '💵 नकद (Cash)' : 'Cash'}</option>
-                    <option value="UPI">{isHindi ? '📱 PhonePe / GooglePay / UPI' : 'UPI'}</option>
-                    <option value="BANK_TRANSFER">{isHindi ? '🏦 बैंक ट्रांसफर (IMPS/NEFT)' : 'Bank Transfer'}</option>
-                    <option value="CHEQUE">{isHindi ? '📝 चेक (Cheque)' : 'Cheque'}</option>
-                  </select>
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                    <div>
+                      <label className="block font-bold text-slate-700 dark:text-slate-300 mb-1">
+                        {isHindi ? 'मुर्गों की संख्या (Birds Count)' : 'Bird Count (Pcs)'}
+                      </label>
+                      <input
+                        type="number"
+                        step="1"
+                        min="1"
+                        placeholder="250"
+                        value={birdCount}
+                        onChange={(e) => setBirdCount(e.target.value)}
+                        className="w-full p-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-white font-black"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block font-bold text-slate-700 dark:text-slate-300 mb-1">
+                        {isHindi ? 'कुल वजन (Total Weight Kg) *' : 'Total Kg *'}
+                      </label>
+                      <input
+                        type="number"
+                        step="any"
+                        required
+                        min="0.1"
+                        placeholder="520.5"
+                        value={birdTotalKg}
+                        onChange={(e) => setBirdTotalKg(e.target.value)}
+                        className="w-full p-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-white font-black"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block font-bold text-slate-700 dark:text-slate-300 mb-1">
+                        {isHindi ? 'भाव / रेट प्रति किलो (₹/Kg) *' : 'Rate (₹/Kg) *'}
+                      </label>
+                      <input
+                        type="number"
+                        step="any"
+                        required
+                        min="1"
+                        placeholder="95"
+                        value={birdRate}
+                        onChange={(e) => setBirdRate(e.target.value)}
+                        className="w-full p-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-white font-black text-blue-600"
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block font-bold text-slate-700 dark:text-slate-300 mb-1">
+                      {isHindi ? 'डायरेक्ट कुल राशि (वैकल्पिक ओवरराइड)' : 'Direct Amount ₹ (Optional Override)'}
+                    </label>
+                    <input
+                      type="number"
+                      step="any"
+                      min="1"
+                      placeholder={isHindi ? 'खाली छोड़ें यदि वजन × भाव इस्तेमाल करना है' : 'Leave blank if using Weight × Rate'}
+                      value={birdDirectAmount}
+                      onChange={(e) => setBirdDirectAmount(e.target.value)}
+                      className="w-full p-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-white font-bold"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block font-bold text-slate-700 dark:text-slate-300 mb-1">
+                      {isHindi ? 'गाड़ी नंबर / कांटा पर्ची / लिफ्टिंग विवरण *' : 'Vehicle # / Slip / Details *'}
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      placeholder={isHindi ? 'उदा. गाड़ी नंबर BR01AB1234, धर्मकांटा पर्ची #542, ड्राइवर राजू' : 'e.g. Truck BR01AB1234, weigh slip #542'}
+                      value={birdReason}
+                      onChange={(e) => setBirdReason(e.target.value)}
+                      className="w-full p-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-white font-bold"
+                    />
+                  </div>
                 </div>
+              )}
+
+              {/* TAB 3: DISCOUNT */}
+              {creditType === 'DISCOUNT' && (
+                <div className="space-y-3">
+                  <div>
+                    <label className="block font-bold text-slate-700 dark:text-slate-300 mb-1">
+                      {isHindi ? 'छूट राशि (Discount Amount ₹) *' : 'Discount Amount (₹) *'}
+                    </label>
+                    <input
+                      type="number"
+                      step="any"
+                      required
+                      min="1"
+                      placeholder="e.g. 1000"
+                      value={paymentAmount}
+                      onChange={(e) => setPaymentAmount(e.target.value)}
+                      className="w-full p-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-white font-black text-sm text-amber-600"
+                    />
+                  </div>
+                </div>
+              )}
+
+              {/* TAB 4: ADJUSTMENT CREDIT */}
+              {creditType === 'ADJUSTMENT_CREDIT' && (
+                <div className="space-y-3">
+                  <div>
+                    <label className="block font-bold text-slate-700 dark:text-slate-300 mb-1">
+                      {isHindi ? 'जमा राशि (Credit Amount ₹) *' : 'Credit Amount (₹) *'}
+                    </label>
+                    <input
+                      type="number"
+                      step="any"
+                      required
+                      min="1"
+                      placeholder="e.g. 500"
+                      value={paymentAmount}
+                      onChange={(e) => setPaymentAmount(e.target.value)}
+                      className="w-full p-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-white font-black text-sm text-purple-600"
+                    />
+                  </div>
+                </div>
+              )}
+
+              {/* Total Calculation Highlight */}
+              <div className="p-4 rounded-2xl bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200 dark:border-emerald-800 flex items-center justify-between">
+                <div>
+                  <span className="text-[11px] font-bold text-emerald-800 dark:text-emerald-300 block">
+                    {isHindi ? 'कुल जमा राशि (Total Credit Amount):' : 'Total Credit Amount:'}
+                  </span>
+                  <span className="text-[10px] text-slate-500 dark:text-slate-400">
+                    {creditType === 'BIRD_SALE'
+                      ? birdDirectAmount
+                        ? 'Direct Total Override'
+                        : `${birdTotalKg || 0} किग्रा × ₹${birdRate || 0}`
+                      : isHindi
+                      ? 'सीधे खाते में जमा (Credit)'
+                      : 'Direct Credit'}
+                  </span>
+                </div>
+                <span className="text-xl sm:text-2xl font-black font-display text-emerald-700 dark:text-emerald-300">
+                  {formatINR(
+                    creditType === 'BIRD_SALE'
+                      ? birdDirectAmount
+                        ? Number(birdDirectAmount || 0)
+                        : Number(birdTotalKg || 0) * Number(birdRate || 0)
+                      : Number(paymentAmount || 0)
+                  )}
+                </span>
               </div>
 
               {/* Date & Time */}
@@ -1023,11 +1680,17 @@ export const AdminKhatabookPage: React.FC = () => {
               {/* Notes */}
               <div>
                 <label className="block font-bold text-slate-700 dark:text-slate-300 mb-1">
-                  {isHindi ? 'रसीद / संदर्भ नोट (वैकल्पिक)' : 'Notes / Receipt Reference'}
+                  {isHindi ? 'रसीद / संदर्भ नोट / अतिरिक्त रिमार्क' : 'Notes / Receipt Reference'}
                 </label>
                 <input
                   type="text"
-                  placeholder="उदा. UPI रिफरेंस नंबर या रसीद"
+                  placeholder={
+                    creditType === 'DISCOUNT'
+                      ? isHindi ? 'उदा. मौसम छूट या विशेष राहत' : 'e.g. Seasonal discount'
+                      : creditType === 'BIRD_SALE'
+                      ? isHindi ? 'उदा. धर्मकांटा रसीद #120, तौल सुपरवाइजर' : 'e.g. Weigh bridge receipt'
+                      : isHindi ? 'उदा. UPI रिफरेंस नंबर या रसीद पर्ची' : 'e.g. UPI Ref # or receipt'
+                  }
                   value={paymentNotes}
                   onChange={(e) => setPaymentNotes(e.target.value)}
                   className="w-full p-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-white"

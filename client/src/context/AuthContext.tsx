@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { User } from '../types';
+import { registerAndSubscribePush } from '../utils/pushNotification';
 
 interface AuthContextType {
   user: User | null;
@@ -27,6 +28,8 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     if (token && user) {
       localStorage.setItem('bp_token', token);
       localStorage.setItem('bp_user', JSON.stringify(user));
+      // Auto-subscribe to Web Push Notifications
+      registerAndSubscribePush().catch((err) => console.error('Push registration error:', err));
     } else {
       localStorage.removeItem('bp_token');
       localStorage.removeItem('bp_user');
@@ -39,6 +42,10 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     setUser(newUser);
     localStorage.setItem('bp_token', newToken);
     localStorage.setItem('bp_user', JSON.stringify(newUser));
+    // Trigger push registration on login
+    setTimeout(() => {
+      registerAndSubscribePush().catch((err) => console.error('Push registration error:', err));
+    }, 500);
   };
 
   const logout = () => {

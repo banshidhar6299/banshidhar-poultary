@@ -53,7 +53,7 @@ export default defineConfig({
               // Ignore client socket errors (ECONNRESET/EPIPE)
             });
           });
-          proxy.on('open', (proxySocket: any) => {
+          (proxy as any).on('open', (proxySocket: any) => {
             proxySocket.on('error', (_err: any) => {
               // Ignore upstream proxy socket errors
             });

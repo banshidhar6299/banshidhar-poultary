@@ -8,7 +8,7 @@ import { ChickLogo } from '../../components/ChickLogo';
 
 export const FarmerLoginPage: React.FC = () => {
   const navigate = useNavigate();
-  const { login } = useAuth();
+  const { login, user, isAuthenticated } = useAuth();
   const { isHindi } = useLanguage();
 
   const [username, setUsername] = useState('');
@@ -18,6 +18,12 @@ export const FarmerLoginPage: React.FC = () => {
   const [error, setError] = useState('');
   const [showHelp, setShowHelp] = useState(false);
   const [lockCountdown, setLockCountdown] = useState<number>(0);
+
+  useEffect(() => {
+    if (isAuthenticated && user?.role === 'FARMER') {
+      navigate('/farmer', { replace: true });
+    }
+  }, [isAuthenticated, user, navigate]);
 
   useEffect(() => {
     if (lockCountdown <= 0) return;
