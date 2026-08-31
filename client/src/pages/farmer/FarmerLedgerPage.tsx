@@ -219,37 +219,66 @@ export const FarmerLedgerPage: React.FC = () => {
 
         {/* Net Outstanding Balance Card */}
         <div
-          className={`p-6 rounded-3xl border shadow-md transition-all ${
+          className={`p-6 rounded-3xl border shadow-sm hover:shadow-md transition-all ${
             isDue
-              ? 'bg-gradient-to-br from-red-50 to-white dark:from-red-950/50 dark:to-slate-900 border-red-200 dark:border-red-900 text-red-900 dark:text-red-200'
+              ? 'bg-red-50/90 dark:bg-red-950/40 border-red-200 dark:border-red-900/60'
               : isAdvance
-              ? 'bg-gradient-to-br from-emerald-50 to-white dark:from-emerald-950/50 dark:to-slate-900 border-emerald-200 dark:border-emerald-900 text-emerald-900 dark:text-emerald-200'
-              : 'bg-white dark:bg-slate-900 border-slate-200 text-slate-900'
+              ? 'bg-emerald-50/90 dark:bg-emerald-950/40 border-emerald-200 dark:border-emerald-900/60'
+              : 'bg-white dark:bg-slate-900 border-slate-200/80 dark:border-slate-800'
           }`}
         >
           <div className="flex items-center justify-between mb-2">
-            <span className="text-xs font-black uppercase tracking-wider">
+            <span
+              className={`text-xs font-bold uppercase tracking-wider ${
+                isDue
+                  ? 'text-red-700 dark:text-red-300'
+                  : isAdvance
+                  ? 'text-emerald-700 dark:text-emerald-300'
+                  : 'text-slate-700 dark:text-slate-300'
+              }`}
+            >
               {isDue
                 ? isHindi ? 'आपका कुल बकाया (Due)' : 'Outstanding Due'
                 : isAdvance
                 ? isHindi ? 'आपका एडवांस जमा (Advance)' : 'Advance Deposit'
-                : isHindi ? 'हिसाब चुकता (Settled)' : 'Settled Balance'}
+                : isHindi ? 'वर्तमान स्थिति (Account Status)' : 'Account Status'}
             </span>
-            <span className={`px-2.5 py-0.5 text-[10px] font-black rounded-lg ${
-              isDue ? 'bg-red-200/80 text-red-800 dark:bg-red-900/60 dark:text-red-200' : 'bg-emerald-200/80 text-emerald-800'
-            }`}>
-              {isDue ? (isHindi ? 'देना शेष है' : 'Pending') : isAdvance ? (isHindi ? 'अग्रिम जमा' : 'Credit') : (isHindi ? 'शून्य' : '0.00')}
+
+            <span
+              className={`px-2.5 py-0.5 text-[10px] font-black rounded-lg ${
+                isDue
+                  ? 'bg-red-200/80 text-red-800 dark:bg-red-900/80 dark:text-red-200'
+                  : isAdvance
+                  ? 'bg-emerald-200/80 text-emerald-800 dark:bg-emerald-900/80 dark:text-emerald-200'
+                  : 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300'
+              }`}
+            >
+              {isDue
+                ? isHindi ? 'देना बाकी' : 'Pending'
+                : isAdvance
+                ? isHindi ? 'अग्रिम जमा' : 'Credit'
+                : isHindi ? 'हिसाब चुकता' : 'Settled'}
             </span>
           </div>
-          <span className="text-2xl sm:text-3xl font-black font-display tracking-tight block">
+
+          <span
+            className={`text-2xl sm:text-3xl font-black font-display tracking-tight block ${
+              isDue
+                ? 'text-red-600 dark:text-red-400'
+                : isAdvance
+                ? 'text-emerald-600 dark:text-emerald-400'
+                : 'text-slate-900 dark:text-white'
+            }`}
+          >
             {formatINR(Math.abs(balanceSummary?.netBalance || 0))}
           </span>
-          <p className="text-[11px] opacity-80 mt-1 font-semibold">
+
+          <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-1 font-semibold">
             {isDue
               ? isHindi ? 'डीलर को भुगतान किया जाना शेष है' : 'Pending balance to dealership'
               : isAdvance
               ? isHindi ? 'डीलर के पास आपका अग्रिम जमा है' : 'Credit balance with dealership'
-              : isHindi ? 'सभी लेन-देन चुकता हैं' : 'All accounts are cleared'}
+              : isHindi ? 'खाते का पूरा हिसाब चुकता है (₹0 बकाया)' : 'All accounts are cleared (Zero balance)'}
           </p>
         </div>
       </div>

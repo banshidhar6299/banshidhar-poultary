@@ -91,8 +91,6 @@ export const PublicLayout: React.FC = () => {
           </span>
         </Link>
       </nav>
-
-      <AIFloatingButton />
       <OfflineBanner />
     </div>
   );

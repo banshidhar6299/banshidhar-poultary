@@ -29,13 +29,12 @@ export const Navbar: React.FC<NavbarProps> = ({ logoUrl }) => {
   const location = useLocation();
 
   const navLinks = [
-    { href: '/', label: isHindi ? 'Home' : 'Home' },
-    { href: '/#rates', label: isHindi ? 'Rates (भाव)' : "Today's Rates" },
-    { href: '/#products', label: isHindi ? 'Products' : 'Products' },
-    { href: '/#calculator', label: isHindi ? 'Calculator' : 'Weight Calculator' },
-    { href: '/#about', label: isHindi ? 'About' : 'About Us' },
-    { href: '/#join', label: isHindi ? 'Join Farmer' : 'Join Us' },
-    { href: '/#contact', label: isHindi ? 'Contact' : 'Contact' }
+    { href: '/', label: isHindi ? 'होम' : 'Home' },
+    { href: '/#rates', label: isHindi ? 'आज का भाव' : "Today's Rates" },
+    { href: '/#products', label: isHindi ? 'उत्पाद' : 'Products' },
+    { href: '/#calculator', label: isHindi ? 'कैलकुलेटर' : 'Calculator' },
+    { href: '/#about', label: isHindi ? 'परिचय' : 'About Us' },
+    { href: '/#contact', label: isHindi ? 'संपर्क' : 'Contact' }
   ];
 
   const toggleLanguage = () => {

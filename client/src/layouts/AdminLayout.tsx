@@ -196,9 +196,7 @@ export const AdminLayout: React.FC = () => {
     { path: '/admin/farmers', label: isHindi ? 'किसान (Farmers)' : 'Farmers', icon: Users },
     { path: '/admin/products', label: isHindi ? 'उत्पाद सूची (Products)' : 'Products', icon: ShoppingBag },
     { path: '/admin/messages', label: isHindi ? 'किसान संदेश (Chat)' : 'Messages', icon: MessageSquare },
-    { path: '/admin/settings/website', label: isHindi ? 'वेबसाइट सेटिंग्स' : 'Website Settings', icon: Settings },
-    { path: '/admin/settings/ai', label: isHindi ? 'AI सेटिंग्स' : 'AI Settings', icon: Sparkles },
-    { path: '/admin/audit', label: isHindi ? 'ऑडिट लॉग्स' : 'Audit Logs', icon: ShieldCheck }
+    { path: '/admin/settings/website', label: isHindi ? 'वेबसाइट सेटिंग्स' : 'Website Settings', icon: Settings }
   ];
 
   // 4 Primary tabs for Mobile Admin Bottom Bar

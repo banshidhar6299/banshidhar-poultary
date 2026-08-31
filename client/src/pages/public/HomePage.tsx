@@ -39,24 +39,6 @@ export const HomePage: React.FC = () => {
   const [categories, setCategories] = useState<Category[]>([]);
   const [selectedCategory, setSelectedCategory] = useState<string>('ALL');
 
-  // Join form state
-  const [joinForm, setJoinForm] = useState({
-    fullName: '',
-    phone: '',
-    email: '',
-    farmName: '',
-    farmAddress: '',
-    village: '',
-    district: '',
-    pinCode: '',
-    expectedChicks: 1000,
-    farmerType: 'NEW',
-    message: ''
-  });
-  const [joinSubmitting, setJoinSubmitting] = useState(false);
-  const [joinSuccess, setJoinSuccess] = useState(false);
-  const [joinError, setJoinError] = useState('');
-
   useEffect(() => {
     // Fetch rates
     api.get('/rates/active').then((res) => {
@@ -73,41 +55,6 @@ export const HomePage: React.FC = () => {
       if (res.data.success) setCategories(res.data.data);
     }).catch(() => {});
   }, []);
-
-  const handleJoinSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setJoinError('');
-
-    if (!joinForm.fullName || !joinForm.phone || !joinForm.farmAddress || !joinForm.village || !joinForm.district || !joinForm.pinCode) {
-      setJoinError(isHindi ? 'कृपया सभी आवश्यक फ़ील्ड भरें।' : 'Please fill all required fields.');
-      return;
-    }
-
-    setJoinSubmitting(true);
-    try {
-      const res = await api.post('/join-requests', joinForm);
-      if (res.data.success) {
-        setJoinSuccess(true);
-        setJoinForm({
-          fullName: '',
-          phone: '',
-          email: '',
-          farmName: '',
-          farmAddress: '',
-          village: '',
-          district: '',
-          pinCode: '',
-          expectedChicks: 1000,
-          farmerType: 'NEW',
-          message: ''
-        });
-      }
-    } catch (err: any) {
-      setJoinError(err.response?.data?.message || 'Failed to submit registration request.');
-    } finally {
-      setJoinSubmitting(false);
-    }
-  };
 
   const filteredProducts =
     selectedCategory === 'ALL'
@@ -181,12 +128,12 @@ export const HomePage: React.FC = () => {
               {t.hero.viewProducts}
             </a>
 
-            <a
-              href="#join"
+            <Link
+              to="/farmer/login"
               className="px-6 py-3 sm:px-8 sm:py-3.5 rounded-2xl bg-amber-500 hover:bg-amber-400 active:scale-95 text-slate-950 font-black text-xs sm:text-sm shadow-lg shadow-amber-500/20 transition-all app-touch-active"
             >
-              {t.hero.joinUs}
-            </a>
+              {isHindi ? 'किसान पासबुक लॉगिन' : 'Farmer Passbook Login'}
+            </Link>
           </div>
         </div>
       </section>
@@ -394,179 +341,6 @@ export const HomePage: React.FC = () => {
               })}
             </div>
           </div>
-        </section>
-
-        {/* 7. JOIN WITH US / FARMER REGISTRATION REQUEST (Spec #16) */}
-        <section id="join" className="rounded-3xl bg-white dark:bg-slate-900 p-6 sm:p-12 border border-slate-200 dark:border-slate-800 shadow-xl space-y-8">
-          <div className="text-center max-w-2xl mx-auto space-y-2">
-            <h2 className="text-2xl sm:text-3xl font-black font-display tracking-tight text-slate-900 dark:text-white">
-              {t.joinUs.title}
-            </h2>
-            <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400">
-              {t.joinUs.subtitle}
-            </p>
-          </div>
-
-          {joinSuccess ? (
-            <div className="p-8 rounded-2xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-900 text-center space-y-3 max-w-lg mx-auto">
-              <CheckCircle className="w-12 h-12 text-emerald-600 mx-auto" />
-              <h3 className="text-base font-bold text-emerald-900 dark:text-emerald-200">
-                {t.joinUs.successMsg}
-              </h3>
-              <button
-                onClick={() => setJoinSuccess(false)}
-                className="px-4 py-2 text-xs font-bold bg-emerald-600 text-white rounded-xl"
-              >
-                Submit another application
-              </button>
-            </div>
-          ) : (
-            <form onSubmit={handleJoinSubmit} className="max-w-3xl mx-auto space-y-4">
-              {joinError && (
-                <div className="p-3 text-xs font-semibold rounded-xl bg-red-50 text-red-700 border border-red-200">
-                  {joinError}
-                </div>
-              )}
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-                    {t.joinUs.fullName} *
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    value={joinForm.fullName}
-                    onChange={(e) => setJoinForm({ ...joinForm, fullName: e.target.value })}
-                    className="w-full px-3.5 py-2.5 text-xs rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-white focus:ring-2 focus:ring-brand-500 focus:outline-none"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-                    {t.joinUs.phone} *
-                  </label>
-                  <input
-                    type="tel"
-                    required
-                    value={joinForm.phone}
-                    onChange={(e) => setJoinForm({ ...joinForm, phone: e.target.value })}
-                    className="w-full px-3.5 py-2.5 text-xs rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-white focus:ring-2 focus:ring-brand-500 focus:outline-none"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-                    {t.joinUs.email}
-                  </label>
-                  <input
-                    type="email"
-                    value={joinForm.email}
-                    onChange={(e) => setJoinForm({ ...joinForm, email: e.target.value })}
-                    className="w-full px-3.5 py-2.5 text-xs rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-white focus:ring-2 focus:ring-brand-500 focus:outline-none"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-                    {t.joinUs.farmName}
-                  </label>
-                  <input
-                    type="text"
-                    value={joinForm.farmName}
-                    onChange={(e) => setJoinForm({ ...joinForm, farmName: e.target.value })}
-                    className="w-full px-3.5 py-2.5 text-xs rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-white focus:ring-2 focus:ring-brand-500 focus:outline-none"
-                  />
-                </div>
-
-                <div className="sm:col-span-2">
-                  <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-                    {t.joinUs.farmAddress} *
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    value={joinForm.farmAddress}
-                    onChange={(e) => setJoinForm({ ...joinForm, farmAddress: e.target.value })}
-                    className="w-full px-3.5 py-2.5 text-xs rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-white focus:ring-2 focus:ring-brand-500 focus:outline-none"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-                    {t.joinUs.village} *
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    value={joinForm.village}
-                    onChange={(e) => setJoinForm({ ...joinForm, village: e.target.value })}
-                    className="w-full px-3.5 py-2.5 text-xs rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-white focus:ring-2 focus:ring-brand-500 focus:outline-none"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-                    {t.joinUs.district} *
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    value={joinForm.district}
-                    onChange={(e) => setJoinForm({ ...joinForm, district: e.target.value })}
-                    className="w-full px-3.5 py-2.5 text-xs rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-white focus:ring-2 focus:ring-brand-500 focus:outline-none"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-                    {t.joinUs.pinCode} *
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    value={joinForm.pinCode}
-                    onChange={(e) => setJoinForm({ ...joinForm, pinCode: e.target.value })}
-                    className="w-full px-3.5 py-2.5 text-xs rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-white focus:ring-2 focus:ring-brand-500 focus:outline-none"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-                    {t.joinUs.expectedChicks}
-                  </label>
-                  <input
-                    type="number"
-                    value={joinForm.expectedChicks}
-                    onChange={(e) => setJoinForm({ ...joinForm, expectedChicks: Number(e.target.value) })}
-                    className="w-full px-3.5 py-2.5 text-xs rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-white focus:ring-2 focus:ring-brand-500 focus:outline-none"
-                  />
-                </div>
-
-                <div className="sm:col-span-2">
-                  <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-                    {t.joinUs.message}
-                  </label>
-                  <textarea
-                    rows={3}
-                    value={joinForm.message}
-                    onChange={(e) => setJoinForm({ ...joinForm, message: e.target.value })}
-                    className="w-full px-3.5 py-2.5 text-xs rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-white focus:ring-2 focus:ring-brand-500 focus:outline-none"
-                  />
-                </div>
-              </div>
-
-              <div className="pt-2">
-                <button
-                  type="submit"
-                  disabled={joinSubmitting}
-                  className="w-full sm:w-auto px-8 py-3.5 rounded-2xl bg-brand-600 hover:bg-brand-700 active:scale-95 disabled:opacity-50 text-white font-extrabold text-sm shadow-xl shadow-brand-600/30 transition-all"
-                >
-                  {joinSubmitting ? t.joinUs.submitting : t.joinUs.submitBtn}
-                </button>
-              </div>
-            </form>
-          )}
         </section>
 
         {/* 8. CONTACT / DEALERSHIP OFFICE (Spec #17) */}
