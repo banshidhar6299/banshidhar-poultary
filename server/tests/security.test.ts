@@ -30,9 +30,11 @@ describe('production security controls', () => {
   });
 
   it('only allows configured browser origins', () => {
-    process.env.CLIENT_URL = 'https://app.example.com, https://admin.example.com';
-    expect(getAllowedOrigins()).toEqual(['https://app.example.com', 'https://admin.example.com']);
+    process.env.CLIENT_URL = 'https://app.example.com/, https://admin.example.com, https://*.vercel.app';
+    expect(getAllowedOrigins()).toEqual(['https://app.example.com', 'https://admin.example.com', 'https://*.vercel.app']);
     expect(isOriginAllowed('https://app.example.com')).toBe(true);
+    expect(isOriginAllowed('https://app.example.com/')).toBe(true);
+    expect(isOriginAllowed('https://my-preview.vercel.app')).toBe(true);
     expect(isOriginAllowed('https://evil.example.com')).toBe(false);
   });
 

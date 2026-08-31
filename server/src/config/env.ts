@@ -107,23 +107,39 @@ export const validateEnvironment = (): void => {
 
 /**
  * Parse CLIENT_URL into a list of allowed origins.
- * Supports multiple comma-separated origins.
+ * Normalizes trailing slashes and supports multiple comma-separated origins.
  */
 export const getAllowedOrigins = (): string[] => {
   const raw = process.env.CLIENT_URL?.trim();
   if (!raw || raw === '*') {
     return ['*'];
   }
-  const configured = raw.split(',').map((value) => value.trim()).filter(Boolean);
+  const configured = raw
+    .split(',')
+    .map((value) => value.trim().replace(/\/+$/, ''))
+    .filter(Boolean);
   return configured.length ? configured : ['*'];
 };
 
 /**
  * Check if a given origin is allowed by CORS configuration.
+ * Normalizes trailing slashes, handles case-insensitivity, and supports wildcard subdomains (e.g. https://*.vercel.app).
  */
 export const isOriginAllowed = (origin?: string): boolean => {
   if (!origin) return true;
+  const normalizedOrigin = origin.trim().replace(/\/+$/, '').toLowerCase();
   const allowed = getAllowedOrigins();
   if (allowed.includes('*')) return true;
-  return allowed.includes(origin);
+
+  return allowed.some((allowedOrigin) => {
+    const normAllowed = allowedOrigin.toLowerCase();
+    if (normAllowed === normalizedOrigin) return true;
+    
+    // Support wildcard subdomains e.g. https://*.vercel.app
+    if (normAllowed.includes('*')) {
+      const regexPattern = '^' + normAllowed.replace(/[.+?^${}()|[\]\\]/g, '\\$&').replace(/\*/g, '.*') + '$';
+      return new RegExp(regexPattern, 'i').test(normalizedOrigin);
+    }
+    return false;
+  });
 };
