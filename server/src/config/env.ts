@@ -9,6 +9,19 @@ export const validateEnvironment = (): void => {
   const isProduction = process.env.NODE_ENV === 'production';
 
   if (isProduction) {
+    // Auto-detect SERVER_URL on Render/cloud platforms if not explicitly provided
+    if (!process.env.SERVER_URL?.trim()) {
+      if (process.env.RENDER_EXTERNAL_URL) {
+        process.env.SERVER_URL = process.env.RENDER_EXTERNAL_URL;
+      } else if (process.env.RENDER_EXTERNAL_HOSTNAME) {
+        process.env.SERVER_URL = `https://${process.env.RENDER_EXTERNAL_HOSTNAME}`;
+      }
+    }
+
+    if (!process.env.BREVO_SENDER_EMAIL?.trim()) {
+      process.env.BREVO_SENDER_EMAIL = 'noreply@banshidharpoultry.com';
+    }
+
     // ── Mandatory variables in production ──────────────────────────────
     const required: string[] = [
       'MONGODB_URI',
