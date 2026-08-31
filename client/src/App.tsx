@@ -88,14 +88,12 @@ export const App: React.FC = () => {
           </FarmerRoute>
         }
       >
-        <Route index element={<FarmerHomePage />} />
-        <Route path="products" element={<FarmerProductsPage />} />
-        <Route path="orders" element={<FarmerOrdersPage />} />
+        <Route index element={<FarmerLedgerPage />} />
         <Route path="ledger" element={<FarmerLedgerPage />} />
         <Route path="khatabook" element={<FarmerLedgerPage />} />
-        <Route path="batches" element={<FarmerBatchesPage />} />
         <Route path="messages" element={<FarmerChatPage />} />
         <Route path="profile" element={<FarmerProfilePage />} />
+        <Route path="*" element={<Navigate to="/farmer" replace />} />
       </Route>
 
       {/* Admin Portal Protected Routes */}
@@ -111,16 +109,15 @@ export const App: React.FC = () => {
         <Route path="khatabook" element={<AdminKhatabookPage />} />
         <Route path="farmers" element={<AdminFarmersPage />} />
         <Route path="farmers/:id" element={<AdminFarmerDetailPage />} />
-        <Route path="orders" element={<AdminOrdersPage />} />
         <Route path="products" element={<AdminProductsPage />} />
-        <Route path="categories" element={<AdminCategoriesPage />} />
-        <Route path="rates" element={<AdminRatesPage />} />
-        <Route path="join-requests" element={<AdminJoinRequestsPage />} />
-        <Route path="settlements" element={<AdminSettlementsPage />} />
         <Route path="messages" element={<AdminChatPage />} />
         <Route path="settings/website" element={<AdminWebsiteSettingsPage />} />
         <Route path="settings/ai" element={<AdminAISettingsPage />} />
         <Route path="audit" element={<AdminAuditPage />} />
+        <Route path="categories" element={<Navigate to="/admin/products" replace />} />
+        <Route path="orders" element={<Navigate to="/admin/khatabook" replace />} />
+        <Route path="rates" element={<Navigate to="/admin/products" replace />} />
+        <Route path="settlements" element={<Navigate to="/admin/khatabook" replace />} />
       </Route>
 
       {/* Fallback */}

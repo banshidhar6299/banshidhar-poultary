@@ -1,40 +1,41 @@
 import React, { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import {
   Download,
   Receipt,
   Calendar,
   Filter,
-  ArrowDownRight,
-  ArrowUpRight,
   Share2,
   BookOpen,
   IndianRupee,
   ShoppingBag,
-  CheckCircle2,
-  Sparkles,
   TrendingDown,
-  TrendingUp
+  TrendingUp,
+  MessageSquare,
+  Clock,
+  CheckCircle2,
+  FileText
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { useLanguage } from '../../context/LanguageContext';
-import { api, formatINR, formatDate } from '../../api/client';
+import { api, formatINR, formatDate, formatDateTime } from '../../api/client';
 import { LedgerTransaction, BalanceSummary } from '../../types';
 import { ChickLoader } from '../../components/ChickLoader';
 import { EmptyState } from '../../components/EmptyState';
 
 export const FarmerLedgerPage: React.FC = () => {
   const { user } = useAuth();
-  const { t, isHindi } = useLanguage();
+  const { isHindi } = useLanguage();
 
   const [transactions, setTransactions] = useState<LedgerTransaction[]>([]);
   const [balanceSummary, setBalanceSummary] = useState<BalanceSummary | null>(null);
   const [loading, setLoading] = useState(true);
   const [downloadingPDF, setDownloadingPDF] = useState(false);
 
-  // Filters
+  // Date Filters
   const [fromDate, setFromDate] = useState('');
   const [toDate, setToDate] = useState('');
-  const [typeFilter, setTypeFilter] = useState<string>('ALL');
+  const [activePreset, setActivePreset] = useState<'ALL' | 'THIS_MONTH' | 'LAST_30'>('ALL');
 
   const loadLedger = async () => {
     if (!user) return;
@@ -44,7 +45,6 @@ export const FarmerLedgerPage: React.FC = () => {
       let url = `/ledger/farmer/${farmerId}?`;
       if (fromDate) url += `fromDate=${fromDate}&`;
       if (toDate) url += `toDate=${toDate}&`;
-      if (typeFilter && typeFilter !== 'ALL') url += `type=${typeFilter}&`;
 
       const res = await api.get(url);
       if (res.data.success) {
@@ -60,7 +60,7 @@ export const FarmerLedgerPage: React.FC = () => {
 
   useEffect(() => {
     loadLedger();
-  }, [user, fromDate, toDate, typeFilter]);
+  }, [user, fromDate, toDate]);
 
   const handleDownloadPDF = async () => {
     if (!user) return;
@@ -81,7 +81,7 @@ export const FarmerLedgerPage: React.FC = () => {
       link.click();
       link.remove();
     } catch (err) {
-      alert('Failed to download PDF statement.');
+      alert(isHindi ? 'पासबुक PDF डाउनलोड करने में विफल।' : 'Failed to download PDF statement.');
     } finally {
       setDownloadingPDF(false);
     }
@@ -95,18 +95,19 @@ export const FarmerLedgerPage: React.FC = () => {
       : `एडवांस राशि: ₹${balanceSummary.advanceAmount}`;
 
     const text = encodeURIComponent(
-      `*बंशीधर पोल्ट्री डिजिटल खाताबही (Passbook)*\n` +
+      `*बंशीधर पोल्ट्री डिजिटल पासबुक*\n` +
       `किसान: ${user.name} (${user.farmerId})\n` +
       `कुल खरीद (नामे): ₹${balanceSummary.totalDebit}\n` +
       `कुल जमा (भुगतान): ₹${balanceSummary.totalCredit}\n` +
       `वर्तमान स्थिति: *${balanceText}*\n\n` +
-      `पूरा विवरण देखें: http://localhost:5173/farmer/ledger`
+      `डिजिटल पासबुक देखें: ${window.location.origin}/farmer`
     );
 
     window.open(`https://wa.me/?text=${text}`, '_blank');
   };
 
   const setPresetRange = (preset: 'THIS_MONTH' | 'LAST_30' | 'ALL') => {
+    setActivePreset(preset);
     if (preset === 'ALL') {
       setFromDate('');
       setToDate('');
@@ -123,30 +124,39 @@ export const FarmerLedgerPage: React.FC = () => {
     setToDate(end.toISOString().split('T')[0]);
   };
 
-  if (loading) return <ChickLoader text={isHindi ? 'आपकी खाताबही लोड हो रही है...' : 'Loading your khatabook...'} />;
+  if (loading) return <ChickLoader text={isHindi ? 'आपकी डिजिटल पासबुक लोड हो रही है...' : 'Loading your passbook...'} />;
 
   const isDue = balanceSummary ? balanceSummary.netBalance > 0 : false;
   const isAdvance = balanceSummary ? balanceSummary.netBalance < 0 : false;
 
   return (
     <div className="space-y-6">
-      {/* Header */}
+      {/* Top Welcome & Actions Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-200 dark:border-slate-800 pb-4">
         <div>
           <div className="flex items-center gap-2">
             <BookOpen className="w-6 h-6 text-brand-600" />
             <h1 className="text-2xl font-black font-display tracking-tight text-slate-900 dark:text-white">
-              {isHindi ? 'मेरी खाताबही (Digital Khatabook)' : 'My Digital Khatabook'}
+              {isHindi ? 'मेरी डिजिटल पासबुक (Passbook)' : 'My Digital Passbook'}
             </h1>
           </div>
           <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
             {isHindi
-              ? 'दाना, चूजा, नकद भुगतान, मुर्गी बिक्री जमा एवं शेष हिसाब का संपूर्ण डिजिटल खाता'
-              : 'Complete ledger record of feed, chicks, payments, bird sales, and running balance'}
+              ? `नमस्ते ${user?.name} जी, आपके दाना-चूजा खरीद, नकद भुगतान और शेष खाते का संपूर्ण विवरण`
+              : `Welcome ${user?.name}, your complete ledger of supplies, payments, and outstanding dues`}
           </p>
         </div>
 
-        <div className="flex items-center gap-2 shrink-0">
+        <div className="flex items-center gap-2.5 shrink-0">
+          {/* Chat with Dealer Shortcut */}
+          <Link
+            to="/farmer/messages"
+            className="flex items-center gap-1.5 px-4 py-2.5 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 font-bold text-xs rounded-2xl transition-all shadow-sm"
+          >
+            <MessageSquare className="w-4 h-4 text-brand-600" />
+            <span>{isHindi ? 'डीलर चैट' : 'Chat'}</span>
+          </Link>
+
           {/* WhatsApp Share */}
           <button
             onClick={handleShareWhatsApp}
@@ -157,238 +167,251 @@ export const FarmerLedgerPage: React.FC = () => {
             <span className="hidden sm:inline">WhatsApp</span>
           </button>
 
-          {/* Download PDF */}
+          {/* Download PDF Button */}
           <button
             onClick={handleDownloadPDF}
             disabled={downloadingPDF}
-            className="flex items-center justify-center gap-2 px-5 py-2.5 bg-brand-600 hover:bg-brand-700 active:scale-95 disabled:opacity-50 text-white font-extrabold text-xs rounded-2xl shadow-md transition-all"
+            className="flex items-center justify-center gap-2 px-5 py-2.5 bg-brand-600 hover:bg-brand-700 active:scale-95 disabled:opacity-50 text-white font-extrabold text-xs rounded-2xl shadow-lg shadow-brand-600/30 transition-all"
           >
             <Download className="w-4 h-4" />
-            <span>{downloadingPDF ? 'Generating PDF...' : isHindi ? 'पासबुक PDF डाउनलोड' : 'Download PDF Passbook'}</span>
+            <span>{downloadingPDF ? (isHindi ? 'PDF बन रही है...' : 'Generating...') : (isHindi ? 'पासबुक PDF डाउनलोड' : 'Download PDF')}</span>
           </button>
         </div>
       </div>
 
-      {/* Summary Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        {/* Total Purchases / Udhar */}
-        <div className="p-5 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-md">
+      {/* 3 Summary Cards */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6">
+        {/* Total Purchases (सामान लिया) */}
+        <div className="p-6 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-sm hover:shadow-md transition-all">
           <div className="flex items-center justify-between mb-2">
-            <span className="text-xs font-bold text-slate-500 dark:text-slate-400">
-              {isHindi ? 'कुल माल लिया (उधार / नामे)' : 'Total Purchases (Debit)'}
+            <span className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+              {isHindi ? 'कुल सामान लिया (नामे)' : 'Total Purchases (Debit)'}
             </span>
-            <div className="w-8 h-8 rounded-xl bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-600">
+            <div className="w-9 h-9 rounded-2xl bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-600">
               <ShoppingBag className="w-4 h-4" />
             </div>
           </div>
-          <span className="text-2xl font-black font-display text-slate-900 dark:text-white">
+          <span className="text-2xl sm:text-3xl font-black font-display text-slate-900 dark:text-white">
             {formatINR(balanceSummary?.totalDebit || 0)}
           </span>
-          <p className="text-[10px] text-slate-400 mt-1 font-semibold">
-            {isHindi ? 'दाना व चूजा खरीद कुल योग' : 'Total feed & chick supplies'}
+          <p className="text-[11px] text-slate-400 mt-1 font-semibold">
+            {isHindi ? 'दाना, चूजा व दवाई का कुल योग' : 'Total supplies delivered'}
           </p>
         </div>
 
-        {/* Total Payments / Jama */}
-        <div className="p-5 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-md">
+        {/* Total Payments (जमा किया) */}
+        <div className="p-6 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-sm hover:shadow-md transition-all">
           <div className="flex items-center justify-between mb-2">
-            <span className="text-xs font-bold text-emerald-600 dark:text-emerald-400">
-              {isHindi ? 'कुल जमा किया (भुगतान / जमा)' : 'Total Payments (Credit)'}
+            <span className="text-xs font-bold text-emerald-600 dark:text-emerald-400 uppercase tracking-wider">
+              {isHindi ? 'कुल जमा किया (भुगतान)' : 'Total Payments (Credit)'}
             </span>
-            <div className="w-8 h-8 rounded-xl bg-emerald-100 dark:bg-emerald-950/60 flex items-center justify-center text-emerald-600">
+            <div className="w-9 h-9 rounded-2xl bg-emerald-100 dark:bg-emerald-950/60 flex items-center justify-center text-emerald-600">
               <TrendingUp className="w-4 h-4" />
             </div>
           </div>
-          <span className="text-2xl font-black font-display text-emerald-600 dark:text-emerald-400">
+          <span className="text-2xl sm:text-3xl font-black font-display text-emerald-600 dark:text-emerald-400">
             {formatINR(balanceSummary?.totalCredit || 0)}
           </span>
-          <p className="text-[10px] text-emerald-600/80 dark:text-emerald-400/80 mt-1 font-semibold">
-            {isHindi ? 'नकद, ऑनलाइन एवं मुर्गी बिक्री जमा' : 'Cash, UPI, & bird sale credits'}
+          <p className="text-[11px] text-emerald-600/80 dark:text-emerald-400/80 mt-1 font-semibold">
+            {isHindi ? 'नकद एवं ऑनलाइन जमा भुगतान' : 'Total payments cleared'}
           </p>
         </div>
 
-        {/* Net Balance */}
+        {/* Net Outstanding Balance Card */}
         <div
-          className={`p-5 rounded-3xl border shadow-md ${
+          className={`p-6 rounded-3xl border shadow-md transition-all ${
             isDue
-              ? 'bg-red-50/90 dark:bg-red-950/50 border-red-200 dark:border-red-900 text-red-900 dark:text-red-200'
+              ? 'bg-gradient-to-br from-red-50 to-white dark:from-red-950/50 dark:to-slate-900 border-red-200 dark:border-red-900 text-red-900 dark:text-red-200'
               : isAdvance
-              ? 'bg-emerald-50/90 dark:bg-emerald-950/50 border-emerald-200 dark:border-emerald-900 text-emerald-900 dark:text-emerald-200'
+              ? 'bg-gradient-to-br from-emerald-50 to-white dark:from-emerald-950/50 dark:to-slate-900 border-emerald-200 dark:border-emerald-900 text-emerald-900 dark:text-emerald-200'
               : 'bg-white dark:bg-slate-900 border-slate-200 text-slate-900'
           }`}
         >
           <div className="flex items-center justify-between mb-2">
             <span className="text-xs font-black uppercase tracking-wider">
               {isDue
-                ? isHindi ? 'आपका कुल बकाया (Due Balance)' : 'Total Due Balance'
+                ? isHindi ? 'आपका कुल बकाया (Due)' : 'Outstanding Due'
                 : isAdvance
-                ? isHindi ? 'आपका एडवांस जमा (Advance)' : 'Advance Balance'
+                ? isHindi ? 'आपका एडवांस जमा (Advance)' : 'Advance Deposit'
                 : isHindi ? 'हिसाब चुकता (Settled)' : 'Settled Balance'}
             </span>
-            <span className={`px-2 py-0.5 text-[10px] font-black rounded-lg ${
-              isDue ? 'bg-red-200/60 text-red-800 dark:bg-red-900/60 dark:text-red-200' : 'bg-emerald-200/60 text-emerald-800'
+            <span className={`px-2.5 py-0.5 text-[10px] font-black rounded-lg ${
+              isDue ? 'bg-red-200/80 text-red-800 dark:bg-red-900/60 dark:text-red-200' : 'bg-emerald-200/80 text-emerald-800'
             }`}>
-              {isDue ? 'देना है' : isAdvance ? 'जमा है' : '0.00'}
+              {isDue ? (isHindi ? 'देना शेष है' : 'Pending') : isAdvance ? (isHindi ? 'अग्रिम जमा' : 'Credit') : (isHindi ? 'शून्य' : '0.00')}
             </span>
           </div>
-          <span className="text-2xl font-black font-display tracking-tight">
+          <span className="text-2xl sm:text-3xl font-black font-display tracking-tight block">
             {formatINR(Math.abs(balanceSummary?.netBalance || 0))}
           </span>
-          <p className="text-[10px] opacity-80 mt-1 font-semibold">
+          <p className="text-[11px] opacity-80 mt-1 font-semibold">
             {isDue
-              ? isHindi ? 'डीलर को भुगतान किया जाना शेष है' : 'Pending payment to dealership'
+              ? isHindi ? 'डीलर को भुगतान किया जाना शेष है' : 'Pending balance to dealership'
               : isAdvance
-              ? isHindi ? 'डीलर के पास आपका अतिरिक्त जमा है' : 'Advance deposit with dealership'
-              : isHindi ? 'कोई बकाया नहीं है' : 'All accounts settled'}
+              ? isHindi ? 'डीलर के पास आपका अग्रिम जमा है' : 'Credit balance with dealership'
+              : isHindi ? 'सभी लेन-देन चुकता हैं' : 'All accounts are cleared'}
           </p>
         </div>
       </div>
 
-      {/* Filter and Range Controls */}
-      <div className="p-4 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm space-y-3">
-        {/* Type Filter Pills */}
-        <div className="flex flex-wrap gap-1.5">
-          {[
-            { id: 'ALL', label: isHindi ? 'सभी प्रविष्टियां (All)' : 'All Entries' },
-            { id: 'PRODUCT_PURCHASE', label: isHindi ? '🔴 दाना खरीद' : 'Feed Purchases' },
-            { id: 'CHICK_PURCHASE', label: isHindi ? '🔴 चूजा आपूर्ति' : 'Chicks' },
-            { id: 'PAYMENT_RECEIVED', label: isHindi ? '🟢 नकद/UPI जमा' : 'Payments Done' },
-            { id: 'BIRD_SALE_CREDIT', label: isHindi ? '🐔 मुर्गी बिक्री जमा' : 'Bird Sale Credit' },
-            { id: 'DISCOUNT', label: isHindi ? '🎁 छूट' : 'Discounts' }
-          ].map((pill) => (
+      {/* Date Filter & Control Bar */}
+      <div className="p-4 sm:p-5 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm space-y-3">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
+          {/* Quick Preset Buttons */}
+          <div className="flex flex-wrap gap-2">
             <button
-              key={pill.id}
-              onClick={() => setTypeFilter(pill.id)}
-              className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all ${
-                typeFilter === pill.id
-                  ? 'bg-brand-600 text-white shadow-sm'
+              onClick={() => setPresetRange('ALL')}
+              className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all ${
+                activePreset === 'ALL' && !fromDate && !toDate
+                  ? 'bg-brand-600 text-white shadow-md'
                   : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200'
               }`}
             >
-              {pill.label}
+              {isHindi ? '📅 सभी समय (All Time)' : 'All Time'}
             </button>
-          ))}
-        </div>
-
-        {/* Date Range Bar */}
-        <div className="flex flex-wrap items-center justify-between gap-3 pt-2 border-t border-slate-100 dark:border-slate-800 text-xs">
-          <div className="flex flex-wrap items-center gap-2">
-            <span className="font-bold text-slate-500 flex items-center gap-1">
-              <Calendar className="w-3.5 h-3.5" />
-              <span>{isHindi ? 'तारीख:' : 'Date:'}</span>
-            </span>
-            <input
-              type="date"
-              value={fromDate}
-              onChange={(e) => setFromDate(e.target.value)}
-              className="px-2.5 py-1 text-xs rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-white"
-            />
-            <span className="text-slate-400">से</span>
-            <input
-              type="date"
-              value={toDate}
-              onChange={(e) => setToDate(e.target.value)}
-              className="px-2.5 py-1 text-xs rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-white"
-            />
-          </div>
-
-          <div className="flex items-center gap-1.5">
             <button
               onClick={() => setPresetRange('THIS_MONTH')}
-              className="px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 font-bold text-[11px]"
+              className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all ${
+                activePreset === 'THIS_MONTH'
+                  ? 'bg-brand-600 text-white shadow-md'
+                  : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200'
+              }`}
             >
-              {isHindi ? 'इस महीने' : 'This Month'}
+              {isHindi ? 'इस महीने (This Month)' : 'This Month'}
             </button>
             <button
               onClick={() => setPresetRange('LAST_30')}
-              className="px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 font-bold text-[11px]"
+              className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all ${
+                activePreset === 'LAST_30'
+                  ? 'bg-brand-600 text-white shadow-md'
+                  : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200'
+              }`}
             >
-              {isHindi ? 'पिछले 30 दिन' : 'Last 30 Days'}
+              {isHindi ? 'पिछले 30 दिन (Last 30 Days)' : 'Last 30 Days'}
             </button>
+          </div>
+
+          {/* Custom Date Pickers */}
+          <div className="flex flex-wrap items-center gap-2 text-xs">
+            <div className="flex items-center gap-1.5 bg-slate-50 dark:bg-slate-950 px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-800">
+              <span className="text-slate-400 font-semibold">{isHindi ? 'तारीख से:' : 'From:'}</span>
+              <input
+                type="date"
+                value={fromDate}
+                onChange={(e) => {
+                  setFromDate(e.target.value);
+                  setActivePreset('ALL');
+                }}
+                className="bg-transparent border-0 text-slate-800 dark:text-white focus:outline-none"
+              />
+            </div>
+
+            <div className="flex items-center gap-1.5 bg-slate-50 dark:bg-slate-950 px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-800">
+              <span className="text-slate-400 font-semibold">{isHindi ? 'तारीख तक:' : 'To:'}</span>
+              <input
+                type="date"
+                value={toDate}
+                onChange={(e) => {
+                  setToDate(e.target.value);
+                  setActivePreset('ALL');
+                }}
+                className="bg-transparent border-0 text-slate-800 dark:text-white focus:outline-none"
+              />
+            </div>
+
             {(fromDate || toDate) && (
               <button
                 onClick={() => setPresetRange('ALL')}
-                className="px-2.5 py-1 rounded-lg text-brand-600 font-bold text-[11px] hover:underline"
+                className="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 text-slate-600 dark:text-slate-300 rounded-xl font-bold transition-all"
               >
-                {isHindi ? 'हटाएं' : 'Clear'}
+                {isHindi ? 'साफ़ करें' : 'Clear'}
               </button>
             )}
           </div>
         </div>
       </div>
 
-      {/* Transactions Passbook Stream */}
-      {transactions.length === 0 ? (
-        <EmptyState
-          title={isHindi ? 'कोई लेन-देन नहीं मिला' : t.ledger.emptyLedger}
-          description={isHindi ? 'जैसे ही आपका ऑर्डर या भुगतान दर्ज होगा, यहां दिखाई देगा।' : 'Transactions will appear as soon as orders or payments are recorded.'}
-          icon={Receipt}
-        />
-      ) : (
-        <div className="space-y-3">
-          {transactions.map((tx) => {
-            const isDebit = tx.debit > 0;
-            return (
-              <div
-                key={tx._id}
-                className="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-3 hover:border-slate-300 dark:hover:border-slate-700 transition-all"
-              >
-                <div className="flex items-start gap-3">
-                  <div
-                    className={`w-10 h-10 rounded-2xl flex items-center justify-center font-bold shrink-0 mt-0.5 ${
-                      isDebit
-                        ? 'bg-red-50 dark:bg-red-950/60 text-red-600 border border-red-200/60 dark:border-red-900/60'
-                        : 'bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 border border-emerald-200/60 dark:border-emerald-900/60'
-                    }`}
-                  >
-                    {isDebit ? <ArrowDownRight className="w-5 h-5" /> : <ArrowUpRight className="w-5 h-5" />}
-                  </div>
+      {/* Passbook Table */}
+      <div className="rounded-3xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-sm overflow-hidden">
+        <div className="p-4 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <FileText className="w-5 h-5 text-brand-600" />
+            <h2 className="text-sm font-bold text-slate-900 dark:text-white">
+              {isHindi ? 'खाता विवरण तालिका (Passbook Ledger)' : 'Transaction History'} ({transactions.length} प्रविष्टियां)
+            </h2>
+          </div>
+          <span className="text-[11px] text-slate-400">
+            {fromDate && toDate ? `${formatDate(fromDate)} - ${formatDate(toDate)}` : (isHindi ? 'सभी लेन-देन' : 'All Entries')}
+          </span>
+        </div>
 
-                  <div>
-                    <div className="flex items-center gap-2">
-                      <p className="text-xs font-bold text-slate-900 dark:text-white">
+        <div className="overflow-x-auto">
+          <table className="w-full text-left text-xs">
+            <thead className="bg-slate-50 dark:bg-slate-950/80 text-slate-500 font-bold border-b border-slate-100 dark:border-slate-800">
+              <tr>
+                <th className="p-3.5">{isHindi ? 'तारीख व समय' : 'Date & Time'}</th>
+                <th className="p-3.5">{isHindi ? 'सामान / भुगतान विवरण' : 'Description'}</th>
+                <th className="p-3.5">{isHindi ? 'माध्यम' : 'Payment Mode'}</th>
+                <th className="p-3.5 text-right">{isHindi ? 'सामान लिया (नामे - DR)' : 'Debit (₹)'}</th>
+                <th className="p-3.5 text-right">{isHindi ? 'जमा किया (भुगतान - CR)' : 'Credit (₹)'}</th>
+                <th className="p-3.5 text-right">{isHindi ? 'बकाया हिसाब (Balance)' : 'Running Balance (₹)'}</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
+              {transactions.length === 0 ? (
+                <tr>
+                  <td colSpan={6} className="p-12 text-center text-slate-400">
+                    <BookOpen className="w-8 h-8 text-slate-300 mx-auto mb-2" />
+                    <p className="font-bold">{isHindi ? 'इस अवधि में कोई लेन-देन नहीं मिला।' : 'No transactions found for this period.'}</p>
+                  </td>
+                </tr>
+              ) : (
+                transactions.map((tx) => (
+                  <tr
+                    key={tx._id}
+                    className={
+                      tx.isVoided
+                        ? 'opacity-40 line-through bg-slate-50/50 dark:bg-slate-950/50'
+                        : 'hover:bg-slate-50/60 dark:hover:bg-slate-800/40'
+                    }
+                  >
+                    <td className="p-3.5 font-mono text-slate-600 dark:text-slate-400 whitespace-nowrap">
+                      {formatDateTime(tx.transactionDate)}
+                    </td>
+                    <td className="p-3.5">
+                      <p className="font-bold text-slate-900 dark:text-white">
                         {isHindi && tx.descriptionHi ? tx.descriptionHi : tx.description}
                       </p>
-                      <span className={`px-2 py-0.5 text-[10px] font-black rounded-md ${
-                        isDebit ? 'bg-red-100 text-red-700 dark:bg-red-950/80 dark:text-red-300' : 'bg-emerald-100 text-emerald-700 dark:bg-emerald-950/80 dark:text-emerald-300'
-                      }`}>
-                        {isDebit ? (isHindi ? 'उधार' : 'Debit') : (isHindi ? 'जमा' : 'Credit')}
-                      </span>
-                    </div>
-
-                    <div className="flex flex-wrap items-center gap-3 text-[11px] text-slate-400 mt-1">
-                      <span>{formatDate(tx.transactionDate)}</span>
-                      {tx.referenceId && <span>बिल / रसीद: {tx.referenceId}</span>}
-                      {tx.quantity && (
-                        <span>
-                          मात्रा: {tx.quantity} {tx.unit || ''} {tx.rate ? `@ ₹${tx.rate}` : ''}
+                      {tx.notes && <p className="text-[10px] text-slate-400 mt-0.5">{tx.notes}</p>}
+                    </td>
+                    <td className="p-3.5">
+                      {tx.paymentMode ? (
+                        <span className="px-2 py-0.5 rounded bg-emerald-50 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300 text-[10px] font-bold">
+                          {tx.paymentMode}
                         </span>
+                      ) : tx.referenceId ? (
+                        <span className="text-[10px] text-slate-400">{tx.referenceId}</span>
+                      ) : (
+                        <span className="text-slate-300">-</span>
                       )}
-                      {tx.notes && <span className="text-slate-500 italic">· {tx.notes}</span>}
-                    </div>
-                  </div>
-                </div>
-
-                <div className="flex sm:flex-col items-center sm:items-end justify-between border-t sm:border-t-0 pt-2 sm:pt-0 border-slate-100 dark:border-slate-800 shrink-0">
-                  <span
-                    className={`text-base font-black font-display ${
-                      isDebit ? 'text-red-600 dark:text-red-400' : 'text-emerald-600 dark:text-emerald-400'
-                    }`}
-                  >
-                    {isDebit ? `+ ${formatINR(tx.debit)}` : `- ${formatINR(tx.credit)}`}
-                  </span>
-                  <div className="flex items-center gap-1.5 text-[11px] font-mono text-slate-500 dark:text-slate-400 mt-0.5">
-                    <span>शेष (Balance):</span>
-                    <span className="font-bold text-slate-700 dark:text-slate-200">
+                    </td>
+                    <td className="p-3.5 text-right font-mono font-bold text-red-600">
+                      {tx.debit > 0 ? formatINR(tx.debit) : '-'}
+                    </td>
+                    <td className="p-3.5 text-right font-mono font-bold text-emerald-600">
+                      {tx.credit > 0 ? formatINR(tx.credit) : '-'}
+                    </td>
+                    <td className="p-3.5 text-right font-mono font-black text-slate-900 dark:text-white">
                       {formatINR(tx.calculatedRunningBalance || 0)}
-                    </span>
-                  </div>
-                </div>
-              </div>
-            );
-          })}
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
         </div>
-      )}
+      </div>
     </div>
   );
 };
+export default FarmerLedgerPage;

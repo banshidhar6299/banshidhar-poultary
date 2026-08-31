@@ -151,9 +151,10 @@ export const generateLedgerPDF = (options: PDFStatementOptions): Promise<Buffer>
           doc.rect(40, tableY, 515, 18).fill('#f8fafc');
         }
 
-        const dateStr = new Date(tx.transactionDate).toLocaleDateString('en-IN');
-        const descStr = tx.description.length > 32 ? tx.description.substring(0, 32) + '...' : tx.description;
-        const refStr = tx.referenceId || tx.referenceType || '-';
+        const d = new Date(tx.transactionDate);
+        const dateStr = `${d.toLocaleDateString('en-IN', { day: '2-digit', month: '2-digit', year: '2-digit' })} ${d.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: true })}`;
+        const descStr = tx.description.length > 36 ? tx.description.substring(0, 36) + '..' : tx.description;
+        const refStr = tx.paymentMode || tx.referenceId || tx.referenceType || '-';
         const debitStr = tx.debit > 0 ? tx.debit.toFixed(2) : '-';
         const creditStr = tx.credit > 0 ? tx.credit.toFixed(2) : '-';
         const balanceStr = `${runningBalance >= 0 ? 'Dr ' : 'Cr '}${Math.abs(runningBalance).toFixed(2)}`;
@@ -161,8 +162,8 @@ export const generateLedgerPDF = (options: PDFStatementOptions): Promise<Buffer>
         doc
           .fillColor('#1e293b')
           .text(dateStr, 45, tableY + 5)
-          .text(descStr, 110, tableY + 5)
-          .text(refStr, 270, tableY + 5)
+          .text(descStr, 120, tableY + 5)
+          .text(refStr, 275, tableY + 5)
           .text(debitStr, 335, tableY + 5, { width: 55, align: 'right' })
           .text(creditStr, 400, tableY + 5, { width: 55, align: 'right' })
           .font('Helvetica-Bold')

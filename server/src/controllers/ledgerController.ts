@@ -85,26 +85,36 @@ export const getFarmerLedger = async (req: AuthenticatedRequest, res: Response):
   }
 };
 
-// Admin: Add Ledger Transaction (Payment, Purchase, Adjustment)
+// Admin: Add Ledger Transaction (Payment, Product Issue / Purchase, Adjustment)
 export const addLedgerTransaction = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
   try {
     const {
       farmerId,
       transactionDate,
-      transactionType,
+      transactionTime,
+      transactionType = 'PRODUCT_PURCHASE',
+      productId,
+      productName,
       description,
       descriptionHi,
       quantity,
       unit,
       rate,
       amount,
+      paymentMode,
       referenceId,
       notes
     } = req.body;
     const user = req.user;
 
-    if (!farmerId || !transactionType || !amount || Number(amount) <= 0) {
-      res.status(400).json({ success: false, message: 'Farmer, Transaction Type, and valid Amount are required.' });
+    // Calculate numeric amount if quantity and rate are passed
+    let finalAmount = Number(amount);
+    if ((!finalAmount || isNaN(finalAmount) || finalAmount <= 0) && quantity && rate) {
+      finalAmount = Number(quantity) * Number(rate);
+    }
+
+    if (!farmerId || !finalAmount || isNaN(finalAmount) || finalAmount <= 0) {
+      res.status(400).json({ success: false, message: 'Farmer and a valid Amount (or Quantity & Rate) are required.' });
       return;
     }
 
@@ -114,45 +124,73 @@ export const addLedgerTransaction = async (req: AuthenticatedRequest, res: Respo
       return;
     }
 
-    const numericAmount = Number(amount);
     let debit = 0;
     let credit = 0;
 
     // Determine debit vs credit
     if (['PRODUCT_PURCHASE', 'CHICK_PURCHASE', 'ADJUSTMENT_DEBIT'].includes(transactionType)) {
-      debit = numericAmount;
+      debit = finalAmount;
     } else {
-      credit = numericAmount;
+      credit = finalAmount;
     }
 
-    const defaultDescriptions: Record<TransactionType, { en: string; hi: string }> = {
-      PRODUCT_PURCHASE: { en: 'Product Purchase', hi: 'सामग्री / दाना खरीद' },
-      CHICK_PURCHASE: { en: 'Chick Supply', hi: 'चूजा आपूर्ति' },
-      PAYMENT_RECEIVED: { en: 'Payment Received (Cash/Online)', hi: 'भुगतान प्राप्त (जमा)' },
-      ADVANCE_PAYMENT: { en: 'Advance Payment', hi: 'अग्रिम भुगतान (एडवांस)' },
-      BIRD_SALE_CREDIT: { en: 'Bird Sale Settlement Credit', hi: 'मुर्गी बिक्री निपटान' },
-      ADJUSTMENT_DEBIT: { en: 'Ledger Adjustment (Debit)', hi: 'खाता समायोजन (बकाया)' },
-      ADJUSTMENT_CREDIT: { en: 'Ledger Adjustment (Credit)', hi: 'खाता समायोजन (जमा)' },
-      DISCOUNT: { en: 'Special Discount / Rebate', hi: 'विशेष छूट / डिस्काउंट' }
-    };
+    // Compose intelligent descriptions
+    let autoDesc = description?.trim();
+    let autoDescHi = descriptionHi?.trim();
 
-    const finalDesc = description?.trim() || defaultDescriptions[transactionType as TransactionType]?.en || 'Ledger Entry';
-    const finalDescHi = descriptionHi?.trim() || defaultDescriptions[transactionType as TransactionType]?.hi;
+    if (!autoDesc) {
+      if (transactionType === 'PRODUCT_PURCHASE' && productName) {
+        const qtyStr = quantity ? `${quantity} ${unit || 'Units'}` : '';
+        const rateStr = rate ? `@ ₹${rate}` : '';
+        autoDesc = `${productName}${qtyStr ? ` (${qtyStr}${rateStr ? ` ${rateStr}` : ''})` : ''}`;
+        autoDescHi = `${productName}${qtyStr ? ` (${qtyStr}${rateStr ? ` ${rateStr}` : ''})` : ''}`;
+      } else if (transactionType === 'PAYMENT_RECEIVED') {
+        const modeStr = paymentMode ? ` (${paymentMode})` : '';
+        autoDesc = `Payment Received${modeStr}`;
+        autoDescHi = `भुगतान प्राप्त${modeStr}`;
+      } else {
+        const defaultDescriptions: Record<string, { en: string; hi: string }> = {
+          PRODUCT_PURCHASE: { en: 'Product Purchase / Goods Issued', hi: 'सामान दिया / दाना खरीद' },
+          CHICK_PURCHASE: { en: 'Chick Supply', hi: 'चूजा आपूर्ति' },
+          PAYMENT_RECEIVED: { en: 'Payment Received', hi: 'भुगतान प्राप्त (जमा)' },
+          ADVANCE_PAYMENT: { en: 'Advance Payment', hi: 'अग्रिम भुगतान (एडवांस)' },
+          BIRD_SALE_CREDIT: { en: 'Bird Sale Settlement Credit', hi: 'मुर्गी बिक्री निपटान' },
+          ADJUSTMENT_DEBIT: { en: 'Ledger Adjustment (Debit)', hi: 'खाता समायोजन (बकाया)' },
+          ADJUSTMENT_CREDIT: { en: 'Ledger Adjustment (Credit)', hi: 'खाता समायोजन (जमा)' },
+          DISCOUNT: { en: 'Special Discount / Rebate', hi: 'विशेष छूट / डिस्काउंट' }
+        };
+        autoDesc = defaultDescriptions[transactionType]?.en || 'Ledger Entry';
+        autoDescHi = defaultDescriptions[transactionType]?.hi || 'खाता प्रविष्टि';
+      }
+    }
+
+    // Combine date and time if separate
+    let finalTxDate = new Date();
+    if (transactionDate) {
+      if (transactionTime && typeof transactionDate === 'string' && !transactionDate.includes('T')) {
+        finalTxDate = new Date(`${transactionDate}T${transactionTime}:00`);
+      } else {
+        finalTxDate = new Date(transactionDate);
+      }
+    }
 
     const transaction = await LedgerTransaction.create({
       farmerId: farmer._id,
       farmerName: farmer.name,
-      transactionDate: transactionDate ? new Date(transactionDate) : new Date(),
+      transactionDate: isNaN(finalTxDate.getTime()) ? new Date() : finalTxDate,
       transactionType,
-      description: finalDesc,
-      descriptionHi: finalDescHi,
+      productId: productId && productId !== '' ? productId : undefined,
+      productName: productName || undefined,
+      description: autoDesc,
+      descriptionHi: autoDescHi,
       quantity: quantity ? Number(quantity) : undefined,
-      unit,
+      unit: unit || undefined,
       rate: rate ? Number(rate) : undefined,
+      paymentMode: paymentMode || undefined,
       debit,
       credit,
       referenceId,
-      referenceType: 'MANUAL_ADJUSTMENT',
+      referenceType: transactionType === 'PAYMENT_RECEIVED' ? 'PAYMENT' : 'MANUAL_ADJUSTMENT',
       notes,
       createdBy: user?.name || 'ADMIN'
     });
@@ -163,8 +201,8 @@ export const addLedgerTransaction = async (req: AuthenticatedRequest, res: Respo
     const isPayment = ['PAYMENT_RECEIVED', 'ADVANCE_PAYMENT'].includes(transactionType);
     const notifTitle = isPayment ? 'Payment Received / भुगतान प्राप्त' : 'Account Entry Added / खाता प्रविष्टि';
     const notifMsg = isPayment
-      ? `Received payment of ₹${numericAmount} on your Banshidhar Poultry account.`
-      : `New entry of ₹${numericAmount} (${finalDesc}) posted to your account.`;
+      ? `Received payment of ₹${finalAmount} on your Banshidhar Poultry account.`
+      : `New entry of ₹${finalAmount} (${autoDesc}) posted to your account.`;
 
     const notif = await Notification.create({
       recipientRole: 'FARMER',
@@ -173,7 +211,7 @@ export const addLedgerTransaction = async (req: AuthenticatedRequest, res: Respo
       title: notifTitle,
       message: notifMsg,
       deepLink: `/farmer/ledger`,
-      metadata: { transactionId: transaction._id, amount: numericAmount }
+      metadata: { transactionId: transaction._id, amount: finalAmount }
     });
 
     emitNotification(notif);

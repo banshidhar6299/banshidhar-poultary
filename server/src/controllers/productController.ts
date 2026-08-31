@@ -102,36 +102,38 @@ export const createProduct = async (req: AuthenticatedRequest, res: Response): P
       imageUrl = uploadRes.url;
     }
 
-    if (!name || !nameHi || !category || !price || !imageUrl) {
+    if (!name || !price) {
       res.status(400).json({
         success: false,
-        message: 'Name (EN & HI), Category, Price, and Product Image are required.'
+        message: 'Product Name and Price/Rate are required.'
       });
       return;
     }
 
+    const defaultImg =
+      'https://images.unsplash.com/photo-1574943320219-553eb213f72d?auto=format&fit=crop&w=600&q=80';
+
     const product = await Product.create({
       name: name.trim(),
-      nameHi: nameHi.trim(),
-      category,
+      nameHi: nameHi?.trim() || name.trim(),
+      category: category && category !== '' ? category : undefined,
       brand: brand ? brand.trim() : 'Banshidhar Quality Feeds',
-      imageUrl,
+      imageUrl: imageUrl || defaultImg,
       shortDescription: shortDescription || name,
-      shortDescriptionHi,
+      shortDescriptionHi: shortDescriptionHi || nameHi || name,
       fullDescription,
       fullDescriptionHi,
       price: Number(price),
       unit: unit || '50kg Bag',
       unitHi: unitHi || '50 किग्रा बोरी',
       bagWeightKg: bagWeightKg ? Number(bagWeightKg) : undefined,
-      inStock: inStock !== undefined ? inStock : true,
-      isFeatured: isFeatured !== undefined ? isFeatured : false,
-      isActive: isActive !== undefined ? isActive : true,
+      inStock: inStock !== undefined ? (inStock === 'true' || inStock === true) : true,
+      isFeatured: isFeatured !== undefined ? (isFeatured === 'true' || isFeatured === true) : false,
+      isActive: isActive !== undefined ? (isActive === 'true' || isActive === true) : true,
       displayOrder: Number(displayOrder) || 0
     });
 
-    const populated = await Product.findById(product._id).populate('category', 'name nameHi');
-    res.status(201).json({ success: true, message: 'Product created successfully', data: populated });
+    res.status(201).json({ success: true, message: 'Product created successfully', data: product });
   } catch (error: any) {
     res.status(500).json({ success: false, message: error.message });
   }
@@ -148,14 +150,18 @@ export const updateProduct = async (req: AuthenticatedRequest, res: Response): P
       updateData.imageUrl = uploadRes.url;
     }
 
-    if (updateData.price) updateData.price = Number(updateData.price);
-    if (updateData.displayOrder) updateData.displayOrder = Number(updateData.displayOrder);
-    if (updateData.bagWeightKg) updateData.bagWeightKg = Number(updateData.bagWeightKg);
+    if (updateData.price !== undefined) updateData.price = Number(updateData.price);
+    if (updateData.displayOrder !== undefined) updateData.displayOrder = Number(updateData.displayOrder);
+    if (updateData.bagWeightKg !== undefined) updateData.bagWeightKg = Number(updateData.bagWeightKg);
+    if (updateData.inStock !== undefined) updateData.inStock = updateData.inStock === 'true' || updateData.inStock === true;
+    if (updateData.isFeatured !== undefined) updateData.isFeatured = updateData.isFeatured === 'true' || updateData.isFeatured === true;
+    if (updateData.isActive !== undefined) updateData.isActive = updateData.isActive === 'true' || updateData.isActive === true;
 
-    const product = await Product.findByIdAndUpdate(id, updateData, { new: true }).populate(
-      'category',
-      'name nameHi'
-    );
+    if (!updateData.category || updateData.category === '') {
+      delete updateData.category;
+    }
+
+    const product = await Product.findByIdAndUpdate(id, updateData, { new: true });
 
     if (!product) {
       res.status(404).json({ success: false, message: 'Product not found' });

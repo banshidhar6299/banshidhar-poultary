@@ -11,6 +11,9 @@ export interface ILedgerTransaction extends Document {
   quantity?: number;
   unit?: string;
   rate?: number;
+  productId?: mongoose.Types.ObjectId;
+  productName?: string;
+  paymentMode?: 'CASH' | 'UPI' | 'BANK_TRANSFER' | 'CHEQUE' | 'OTHER';
   debit: number; // Amount farmer owes (Baki / Kharid)
   credit: number; // Amount farmer paid / credited (Jama / Bhugtan)
   runningBalance?: number; // Snapshot of balance after this transaction
@@ -51,6 +54,12 @@ const LedgerTransactionSchema = new Schema<ILedgerTransaction>(
     quantity: { type: Number },
     unit: { type: String },
     rate: { type: Number },
+    productId: { type: Schema.Types.ObjectId, ref: 'Product' },
+    productName: { type: String },
+    paymentMode: {
+      type: String,
+      enum: ['CASH', 'UPI', 'BANK_TRANSFER', 'CHEQUE', 'OTHER']
+    },
     debit: { type: Number, default: 0, min: 0 },
     credit: { type: Number, default: 0, min: 0 },
     runningBalance: { type: Number },

@@ -45,11 +45,11 @@ export interface Category {
 export interface Product {
   _id: string;
   name: string;
-  nameHi: string;
-  category: Category | string;
-  brand: string;
-  imageUrl: string;
-  shortDescription: string;
+  nameHi?: string;
+  category?: Category | string;
+  brand?: string;
+  imageUrl?: string;
+  shortDescription?: string;
   shortDescriptionHi?: string;
   fullDescription?: string;
   fullDescriptionHi?: string;
@@ -57,10 +57,10 @@ export interface Product {
   unit: string;
   unitHi?: string;
   bagWeightKg?: number;
-  inStock: boolean;
-  isFeatured: boolean;
-  isActive: boolean;
-  displayOrder: number;
+  inStock?: boolean;
+  isFeatured?: boolean;
+  isActive?: boolean;
+  displayOrder?: number;
 }
 
 export interface RateCard {
@@ -129,6 +129,9 @@ export interface LedgerTransaction {
   farmerName: string;
   transactionDate: string;
   transactionType: TransactionType;
+  productId?: string;
+  productName?: string;
+  paymentMode?: 'CASH' | 'UPI' | 'BANK_TRANSFER' | 'CHEQUE' | 'OTHER';
   description: string;
   descriptionHi?: string;
   quantity?: number;

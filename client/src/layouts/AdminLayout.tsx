@@ -193,14 +193,9 @@ export const AdminLayout: React.FC = () => {
   const navItems = [
     { path: '/admin', label: isHindi ? 'डैशबोर्ड' : 'Dashboard', icon: LayoutDashboard, exact: true },
     { path: '/admin/khatabook', label: isHindi ? 'खाताबही (Khatabook)' : 'Khatabook', icon: BookOpen },
-    { path: '/admin/farmers', label: isHindi ? 'किसान खाता' : 'Farmers', icon: Users },
-    { path: '/admin/orders', label: isHindi ? 'ऑर्डर्स' : 'Orders', icon: ShoppingBag },
-    { path: '/admin/products', label: isHindi ? 'उत्पाद सूची' : 'Products', icon: ShoppingBag },
-    { path: '/admin/categories', label: isHindi ? 'श्रेणियां' : 'Categories', icon: Layers },
-    { path: '/admin/rates', label: isHindi ? 'आज का भाव' : 'Daily Rates', icon: TrendingUp },
-    { path: '/admin/join-requests', label: isHindi ? 'किसान आवेदन' : 'Join Requests', icon: UserCheck },
-    { path: '/admin/settlements', label: isHindi ? 'मुर्गी तौल निपटान' : 'Bird Settlements', icon: Scale },
-    { path: '/admin/messages', label: isHindi ? 'किसान संदेश' : 'Messages', icon: MessageSquare },
+    { path: '/admin/farmers', label: isHindi ? 'किसान (Farmers)' : 'Farmers', icon: Users },
+    { path: '/admin/products', label: isHindi ? 'उत्पाद सूची (Products)' : 'Products', icon: ShoppingBag },
+    { path: '/admin/messages', label: isHindi ? 'किसान संदेश (Chat)' : 'Messages', icon: MessageSquare },
     { path: '/admin/settings/website', label: isHindi ? 'वेबसाइट सेटिंग्स' : 'Website Settings', icon: Settings },
     { path: '/admin/settings/ai', label: isHindi ? 'AI सेटिंग्स' : 'AI Settings', icon: Sparkles },
     { path: '/admin/audit', label: isHindi ? 'ऑडिट लॉग्स' : 'Audit Logs', icon: ShieldCheck }
@@ -211,7 +206,7 @@ export const AdminLayout: React.FC = () => {
     { path: '/admin', label: isHindi ? 'डैशबोर्ड' : 'Dashboard', icon: LayoutDashboard, exact: true },
     { path: '/admin/khatabook', label: isHindi ? 'खाताबही' : 'Khata', icon: BookOpen },
     { path: '/admin/farmers', label: isHindi ? 'किसान' : 'Farmers', icon: Users },
-    { path: '/admin/orders', label: isHindi ? 'ऑर्डर्स' : 'Orders', icon: ShoppingBag }
+    { path: '/admin/products', label: isHindi ? 'उत्पाद' : 'Products', icon: ShoppingBag }
   ];
 
   const isActive = (path: string, exact = false) => {
