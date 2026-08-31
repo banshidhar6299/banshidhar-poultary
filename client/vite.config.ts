@@ -43,7 +43,13 @@ export default defineConfig({
       },
       '/socket.io': {
         target: 'http://localhost:5050',
-        ws: true
+        ws: true,
+        configure: (proxy) => {
+          proxy.on('error', (err: any) => {
+            if (err.code === 'EPIPE' || err.code === 'ECONNRESET') return;
+            console.error('[vite] ws proxy error:', err.message);
+          });
+        }
       }
     }
   }
