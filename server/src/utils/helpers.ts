@@ -33,18 +33,26 @@ export const hashToken = (token: string): string => {
 };
 
 export const createJWT = (payload: AuthPayload): string => {
-  const secret = process.env.JWT_SECRET || 'banshidhar_poultry_default_secret_key_2026';
+  const secret = getJWTSecret();
   const expiresIn = process.env.JWT_EXPIRES_IN || '7d';
   return jwt.sign(payload, secret, { expiresIn: expiresIn as any });
 };
 
 export const verifyJWT = (token: string): AuthPayload | null => {
   try {
-    const secret = process.env.JWT_SECRET || 'banshidhar_poultry_default_secret_key_2026';
+    const secret = getJWTSecret();
     return jwt.verify(token, secret) as AuthPayload;
   } catch {
     return null;
   }
+};
+
+const getJWTSecret = (): string => {
+  const secret = process.env.JWT_SECRET;
+  if (!secret && process.env.NODE_ENV === 'production') {
+    throw new Error('JWT_SECRET is required in production.');
+  }
+  return secret || 'development-only-secret-change-before-deploying';
 };
 
 export const roundPaise = (amount: number): number => {

@@ -64,7 +64,14 @@ export const markNotificationRead = async (req: AuthenticatedRequest, res: Respo
       return;
     }
 
-    const notif = await Notification.findByIdAndUpdate(id, { isRead: true, readAt: new Date() }, { new: true });
+    const ownershipFilter: any = user.role === 'ADMIN'
+      ? { _id: id, recipientRole: 'ADMIN' }
+      : { _id: id, recipientRole: 'FARMER', recipientId: user.userId };
+    const notif = await Notification.findOneAndUpdate(ownershipFilter, { isRead: true, readAt: new Date() }, { new: true });
+    if (!notif) {
+      res.status(404).json({ success: false, message: 'Notification not found.' });
+      return;
+    }
     res.json({ success: true, data: notif });
   } catch (error: any) {
     res.status(500).json({ success: false, message: error.message });

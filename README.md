@@ -96,6 +96,12 @@ Ensure you have the following installed:
 
 ## 🚀 Step-by-Step Installation Guide (इंस्टॉलेशन गाइड)
 
+> Production deployments require Node.js 20.19+, MongoDB, a strong `JWT_SECRET`, exact
+> comma-separated `CLIENT_URL` origins, public `SERVER_URL`, Brevo email credentials,
+> and Cloudinary credentials. The server deliberately refuses to start in production
+> when these durable-storage/security dependencies are missing. AI and web-push keys
+> remain optional; those features fall back or report unavailable when unconfigured.
+
 ### Step 1: Clone or Navigate to Directory
 ```bash
 cd /Users/nishantkumar/Desktop/project/Banshidhar_poultary
@@ -173,6 +179,22 @@ npm run test
 ```bash
 npm run build
 ```
+
+### Production verification
+
+Run the complete local gate before deployment:
+
+```bash
+npm ci
+npm run check
+npm audit --omit=dev
+```
+
+Deploy the backend from `render.yaml` and the frontend from `client/`. Configure
+`VITE_API_URL` in the frontend host to the public backend URL (without a trailing
+`/api`). Verify `/health` returns HTTP 200 after deployment. Never run the sample
+seed script against a live production database: it clears application collections
+and installs demonstration credentials.
 
 ---
 

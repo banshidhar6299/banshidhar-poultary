@@ -58,7 +58,7 @@ const fileFilter = (
     'video/quicktime'
   ];
 
-  if (allowedMimeTypes.includes(file.mimetype) || file.mimetype.startsWith('image/') || file.mimetype.startsWith('audio/') || file.mimetype.startsWith('video/')) {
+  if (allowedMimeTypes.includes(file.mimetype)) {
     cb(null, true);
   } else {
     cb(new Error('Unsupported media format. Please upload valid image, audio, or video files.'));
@@ -69,7 +69,8 @@ export const upload = multer({
   storage,
   fileFilter,
   limits: {
-    fileSize: 100 * 1024 * 1024 // 100MB max limit for full video uploads
+    fileSize: Number(process.env.MAX_UPLOAD_MB || 25) * 1024 * 1024,
+    files: 3
   }
 });
 

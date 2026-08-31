@@ -36,8 +36,14 @@ export const initializeSocketIO = (io: SocketIOServer): void => {
     }
 
     // Join specific conversation room
-    socket.on('join_conversation', (conversationId: string) => {
-      socket.join(`conv_${conversationId}`);
+    const canAccessConversation = async (conversationId: string): Promise<boolean> => {
+      if (!conversationId || typeof conversationId !== 'string') return false;
+      if (user.role === 'ADMIN') return Boolean(await Conversation.exists({ _id: conversationId }));
+      return Boolean(await Conversation.exists({ _id: conversationId, farmerId: user.userId }));
+    };
+
+    socket.on('join_conversation', async (conversationId: string) => {
+      if (await canAccessConversation(conversationId)) socket.join(`conv_${conversationId}`);
     });
 
     socket.on('leave_conversation', (conversationId: string) => {
@@ -45,15 +51,17 @@ export const initializeSocketIO = (io: SocketIOServer): void => {
     });
 
     // Realtime typing indicators
-    socket.on('typing_start', ({ conversationId, senderName }) => {
+    socket.on('typing_start', async ({ conversationId }) => {
+      if (!(await canAccessConversation(conversationId))) return;
       socket.to(`conv_${conversationId}`).emit('user_typing', {
         conversationId,
-        senderName,
+        senderName: user.name,
         isTyping: true
       });
     });
 
-    socket.on('typing_stop', ({ conversationId }) => {
+    socket.on('typing_stop', async ({ conversationId }) => {
+      if (!(await canAccessConversation(conversationId))) return;
       socket.to(`conv_${conversationId}`).emit('user_typing', {
         conversationId,
         isTyping: false
@@ -61,8 +69,10 @@ export const initializeSocketIO = (io: SocketIOServer): void => {
     });
 
     // Realtime message read update
-    socket.on('mark_messages_read', async ({ conversationId, readerRole }) => {
+    socket.on('mark_messages_read', async ({ conversationId }) => {
       try {
+        if (!(await canAccessConversation(conversationId))) return;
+        const readerRole = user.role;
         await Message.updateMany(
           {
             conversationId,

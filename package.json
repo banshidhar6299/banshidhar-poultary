@@ -3,6 +3,10 @@
   "version": "1.0.0",
   "private": true,
   "description": "Production-quality mobile-first Poultry Dealer Management Ecosystem for Banshidhar Poultry",
+  "engines": {
+    "node": ">=20.19.0",
+    "npm": ">=10"
+  },
   "workspaces": [
     "server",
     "client"
@@ -14,7 +18,8 @@
     "build": "npm run build --workspace=server && npm run build --workspace=client",
     "test": "npm run test --workspace=server",
     "seed": "npm run seed --workspace=server",
-    "start": "npm run start --workspace=server"
+    "start": "npm run start --workspace=server",
+    "check": "npm test && npm run build"
   },
   "devDependencies": {
     "concurrently": "^9.1.2"

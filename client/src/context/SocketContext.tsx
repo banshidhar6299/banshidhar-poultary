@@ -37,12 +37,10 @@ export const SocketProvider: React.FC<{ children: ReactNode }> = ({ children }) 
     });
 
     socketInstance.on('connect', () => {
-      console.log('[Socket] Connected to realtime server');
       setIsConnected(true);
     });
 
     socketInstance.on('disconnect', () => {
-      console.log('[Socket] Disconnected from realtime server');
       setIsConnected(false);
     });
 

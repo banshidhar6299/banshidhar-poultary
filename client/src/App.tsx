@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { Suspense, lazy } from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { useAuth } from './context/AuthContext';
 
@@ -8,39 +8,30 @@ import { FarmerLayout } from './layouts/FarmerLayout';
 import { AdminLayout } from './layouts/AdminLayout';
 
 // Public Pages
-import { HomePage } from './pages/public/HomePage';
-import { NotFoundPage } from './pages/public/NotFoundPage';
+const HomePage = lazy(() => import('./pages/public/HomePage').then((m) => ({ default: m.HomePage })));
+const NotFoundPage = lazy(() => import('./pages/public/NotFoundPage').then((m) => ({ default: m.NotFoundPage })));
 
 // Auth Pages
-import { AdminLoginPage } from './pages/auth/AdminLoginPage';
-import { FarmerLoginPage } from './pages/auth/FarmerLoginPage';
-import { ForgotPasswordPage } from './pages/auth/ForgotPasswordPage';
-import { ResetPasswordPage } from './pages/auth/ResetPasswordPage';
+const AdminLoginPage = lazy(() => import('./pages/auth/AdminLoginPage').then((m) => ({ default: m.AdminLoginPage })));
+const FarmerLoginPage = lazy(() => import('./pages/auth/FarmerLoginPage').then((m) => ({ default: m.FarmerLoginPage })));
+const ForgotPasswordPage = lazy(() => import('./pages/auth/ForgotPasswordPage').then((m) => ({ default: m.ForgotPasswordPage })));
+const ResetPasswordPage = lazy(() => import('./pages/auth/ResetPasswordPage').then((m) => ({ default: m.ResetPasswordPage })));
 
 // Farmer Pages
-import { FarmerHomePage } from './pages/farmer/FarmerHomePage';
-import { FarmerProductsPage } from './pages/farmer/FarmerProductsPage';
-import { FarmerOrdersPage } from './pages/farmer/FarmerOrdersPage';
-import { FarmerLedgerPage } from './pages/farmer/FarmerLedgerPage';
-import { FarmerBatchesPage } from './pages/farmer/FarmerBatchesPage';
-import { FarmerChatPage } from './pages/farmer/FarmerChatPage';
-import { FarmerProfilePage } from './pages/farmer/FarmerProfilePage';
+const FarmerLedgerPage = lazy(() => import('./pages/farmer/FarmerLedgerPage').then((m) => ({ default: m.FarmerLedgerPage })));
+const FarmerChatPage = lazy(() => import('./pages/farmer/FarmerChatPage').then((m) => ({ default: m.FarmerChatPage })));
+const FarmerProfilePage = lazy(() => import('./pages/farmer/FarmerProfilePage').then((m) => ({ default: m.FarmerProfilePage })));
 
 // Admin Pages
-import { AdminDashboardPage } from './pages/admin/AdminDashboardPage';
-import { AdminKhatabookPage } from './pages/admin/AdminKhatabookPage';
-import { AdminFarmersPage } from './pages/admin/AdminFarmersPage';
-import { AdminFarmerDetailPage } from './pages/admin/AdminFarmerDetailPage';
-import { AdminOrdersPage } from './pages/admin/AdminOrdersPage';
-import { AdminProductsPage } from './pages/admin/AdminProductsPage';
-import { AdminCategoriesPage } from './pages/admin/AdminCategoriesPage';
-import { AdminRatesPage } from './pages/admin/AdminRatesPage';
-import { AdminJoinRequestsPage } from './pages/admin/AdminJoinRequestsPage';
-import { AdminSettlementsPage } from './pages/admin/AdminSettlementsPage';
-import { AdminChatPage } from './pages/admin/AdminChatPage';
-import { AdminWebsiteSettingsPage } from './pages/admin/AdminWebsiteSettingsPage';
-import { AdminAISettingsPage } from './pages/admin/AdminAISettingsPage';
-import { AdminAuditPage } from './pages/admin/AdminAuditPage';
+const AdminDashboardPage = lazy(() => import('./pages/admin/AdminDashboardPage').then((m) => ({ default: m.AdminDashboardPage })));
+const AdminKhatabookPage = lazy(() => import('./pages/admin/AdminKhatabookPage').then((m) => ({ default: m.AdminKhatabookPage })));
+const AdminFarmersPage = lazy(() => import('./pages/admin/AdminFarmersPage').then((m) => ({ default: m.AdminFarmersPage })));
+const AdminFarmerDetailPage = lazy(() => import('./pages/admin/AdminFarmerDetailPage').then((m) => ({ default: m.AdminFarmerDetailPage })));
+const AdminProductsPage = lazy(() => import('./pages/admin/AdminProductsPage').then((m) => ({ default: m.AdminProductsPage })));
+const AdminChatPage = lazy(() => import('./pages/admin/AdminChatPage').then((m) => ({ default: m.AdminChatPage })));
+const AdminWebsiteSettingsPage = lazy(() => import('./pages/admin/AdminWebsiteSettingsPage').then((m) => ({ default: m.AdminWebsiteSettingsPage })));
+const AdminAISettingsPage = lazy(() => import('./pages/admin/AdminAISettingsPage').then((m) => ({ default: m.AdminAISettingsPage })));
+const AdminAuditPage = lazy(() => import('./pages/admin/AdminAuditPage').then((m) => ({ default: m.AdminAuditPage })));
 
 import { ChickLoader } from './components/ChickLoader';
 
@@ -81,6 +72,7 @@ const RootRedirect: React.FC = () => {
 
 export const App: React.FC = () => {
   return (
+    <Suspense fallback={<ChickLoader text="Loading..." />}>
     <Routes>
       {/* Public Routes */}
       <Route path="/" element={<PublicLayout />}>
@@ -138,6 +130,7 @@ export const App: React.FC = () => {
       {/* Fallback */}
       <Route path="*" element={<NotFoundPage />} />
     </Routes>
+    </Suspense>
   );
 };
 
