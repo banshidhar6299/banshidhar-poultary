@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="100" height="100">
+  <defs>
+    <linearGradient id="chickGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#2563eb" />
+      <stop offset="100%" stop-color="#1d4ed8" />
+    </linearGradient>
+    <linearGradient id="goldGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#fbbf24" />
+      <stop offset="100%" stop-color="#f59e0b" />
+    </linearGradient>
+  </defs>
+  <!-- Background Circle -->
+  <circle cx="50" cy="50" r="48" fill="url(#chickGrad)" />
+  <!-- Cute Chick Body -->
+  <ellipse cx="50" cy="58" rx="22" ry="24" fill="url(#goldGrad)" />
+  <!-- Chick Head -->
+  <circle cx="50" cy="38" r="16" fill="url(#goldGrad)" />
+  <!-- Chick Tuft of Feathers -->
+  <path d="M48 22 Q50 16 54 20 Q56 22 52 24 Z" fill="#f59e0b" />
+  <!-- Eye -->
+  <circle cx="44" cy="36" r="3.5" fill="#1e293b" />
+  <circle cx="43" cy="35" r="1.2" fill="#ffffff" />
+  <!-- Beak -->
+  <polygon points="36,40 30,44 36,46" fill="#ea580c" />
+  <!-- Chick Wing -->
+  <ellipse cx="60" cy="58" rx="10" ry="14" fill="#f59e0b" transform="rotate(-15 60 58)" />
+  <!-- Chick Feet -->
+  <path d="M44 82 L44 90 M44 90 L38 90 M44 90 L48 90" stroke="#ea580c" stroke-width="3" stroke-linecap="round" />
+  <path d="M56 82 L56 90 M56 90 L50 90 M56 90 L60 90" stroke="#ea580c" stroke-width="3" stroke-linecap="round" />
+</svg>
