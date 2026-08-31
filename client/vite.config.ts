@@ -45,9 +45,18 @@ export default defineConfig({
         target: 'http://localhost:5050',
         ws: true,
         configure: (proxy) => {
-          proxy.on('error', (err: any) => {
-            if (err.code === 'EPIPE' || err.code === 'ECONNRESET') return;
-            console.error('[vite] ws proxy error:', err.message);
+          proxy.on('error', (_err: any) => {
+            // Ignore normal socket disconnects on restart/reload
+          });
+          proxy.on('proxyReqWs', (_proxyReq, _req, socket: any) => {
+            socket.on('error', (_err: any) => {
+              // Ignore client socket errors (ECONNRESET/EPIPE)
+            });
+          });
+          proxy.on('open', (proxySocket: any) => {
+            proxySocket.on('error', (_err: any) => {
+              // Ignore upstream proxy socket errors
+            });
           });
         }
       }
