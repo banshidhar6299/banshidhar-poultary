@@ -27,12 +27,7 @@ export const validateEnvironment = (): void => {
       'MONGODB_URI',
       'JWT_SECRET',
       'CLIENT_URL',
-      'SERVER_URL',
-      'BREVO_API_KEY',
-      'BREVO_SENDER_EMAIL',
-      'CLOUDINARY_CLOUD_NAME',
-      'CLOUDINARY_API_KEY',
-      'CLOUDINARY_API_SECRET'
+      'SERVER_URL'
     ];
 
     const missing = required.filter((key) => !process.env[key]?.trim());
@@ -41,6 +36,14 @@ export const validateEnvironment = (): void => {
         `Missing required production environment variables: ${missing.join(', ')}. ` +
         'Set these in your deployment dashboard (e.g. Render).'
       );
+    }
+
+    if (!process.env.BREVO_API_KEY?.trim()) {
+      console.warn('[Env] Notice: BREVO_API_KEY is not set. Password reset emails will be disabled until configured.');
+    }
+
+    if (!process.env.CLOUDINARY_CLOUD_NAME?.trim()) {
+      console.warn('[Env] Notice: CLOUDINARY credentials are not set. Media uploads will require Cloudinary configuration.');
     }
 
     // ── JWT_SECRET strength ────────────────────────────────────────────
