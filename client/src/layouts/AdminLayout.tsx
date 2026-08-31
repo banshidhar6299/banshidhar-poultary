@@ -274,8 +274,14 @@ export const AdminLayout: React.FC = () => {
           </div>
         )}
 
+        {/* Developed by Nishant Badge */}
+        <div className="pt-2 pb-1 text-center text-[10px] text-slate-400 dark:text-slate-500">
+          <span>Developed by </span>
+          <span className="font-extrabold text-brand-600 dark:text-brand-400">Nishant</span>
+        </div>
+
         {/* Bottom User info */}
-        <div className="pt-3 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between">
+        <div className="pt-2 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between">
           <button
             onClick={() => setSecurityModalOpen(true)}
             className="flex items-center gap-2 text-left hover:opacity-80 transition-opacity app-touch-active"
@@ -382,8 +388,21 @@ export const AdminLayout: React.FC = () => {
         </header>
 
         {/* Page Content */}
-        <main className="flex-1 p-3 sm:p-6 max-w-7xl w-full mx-auto pb-24 lg:pb-8">
-          <Outlet />
+        <main className="flex-1 p-3 sm:p-6 max-w-7xl w-full mx-auto pb-24 lg:pb-8 flex flex-col justify-between">
+          <div>
+            <Outlet />
+          </div>
+
+          {/* Admin Bottom Footer */}
+          <div className="mt-8 pt-4 border-t border-slate-200/80 dark:border-slate-800/80 flex flex-col sm:flex-row items-center justify-between gap-2 text-[11px] text-slate-500 dark:text-slate-400">
+            <span>© {new Date().getFullYear()} Banshidhar Poultry · Admin Console</span>
+            <div className="flex items-center gap-1.5 font-medium">
+              <span>Developed by</span>
+              <span className="font-extrabold text-brand-600 dark:text-brand-400 bg-brand-50 dark:bg-brand-950/60 px-2.5 py-0.5 rounded-full border border-brand-200 dark:border-brand-800 text-[10px]">
+                Nishant
+              </span>
+            </div>
+          </div>
         </main>
       </div>
 
@@ -477,7 +496,12 @@ export const AdminLayout: React.FC = () => {
               </button>
             )}
 
-            <div className="pt-3 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between">
+            <div className="pt-2 text-center text-[10px] text-slate-400 dark:text-slate-500">
+              <span>Developed by </span>
+              <span className="font-extrabold text-brand-600 dark:text-brand-400">Nishant</span>
+            </div>
+
+            <div className="pt-2 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between">
               <button
                 onClick={() => {
                   setSidebarOpen(false);

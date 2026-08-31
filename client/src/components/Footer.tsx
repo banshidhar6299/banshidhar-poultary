@@ -104,9 +104,15 @@ export const Footer: React.FC<FooterProps> = ({ settings }) => {
           </div>
         </div>
 
-        {/* Bottom Bar with Subtle Admin Link */}
+        {/* Bottom Bar with Developed by Nishant & Subtle Admin Link */}
         <div className="mt-12 pt-6 border-t border-slate-800 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-slate-500">
           <p>© {new Date().getFullYear()} Banshidhar Poultry. All rights reserved.</p>
+          <div className="flex items-center gap-1.5 text-xs font-semibold text-slate-400">
+            <span>Developed by</span>
+            <span className="font-extrabold text-brand-400 bg-brand-950/80 px-2.5 py-0.5 rounded-full border border-brand-800/80 text-[11px] shadow-sm tracking-wide">
+              Nishant
+            </span>
+          </div>
           <div className="flex items-center gap-4">
             <Link
               to="/admin/login"

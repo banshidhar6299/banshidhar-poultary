@@ -134,8 +134,21 @@ export const FarmerLayout: React.FC = () => {
       </header>
 
       {/* Main Content (With safe padding for mobile bottom bar) */}
-      <main className="flex-1 mx-auto w-full max-w-7xl px-3 sm:px-6 py-4 sm:py-6 pb-24 md:pb-8">
-        <Outlet />
+      <main className="flex-1 mx-auto w-full max-w-7xl px-3 sm:px-6 py-4 sm:py-6 pb-24 md:pb-8 flex flex-col justify-between">
+        <div>
+          <Outlet />
+        </div>
+
+        {/* Farmer Portal Bottom Footer */}
+        <div className="mt-8 pt-4 border-t border-slate-200/80 dark:border-slate-800/80 flex flex-col sm:flex-row items-center justify-between gap-2 text-[11px] text-slate-500 dark:text-slate-400">
+          <span>© {new Date().getFullYear()} Banshidhar Poultry · Farmer Portal</span>
+          <div className="flex items-center gap-1.5 font-medium">
+            <span>Developed by</span>
+            <span className="font-extrabold text-brand-600 dark:text-brand-400 bg-brand-50 dark:bg-brand-950/60 px-2.5 py-0.5 rounded-full border border-brand-200 dark:border-brand-800 text-[10px]">
+              Nishant
+            </span>
+          </div>
+        </div>
       </main>
 
       {/* Native App Mobile Bottom Navigation Bar */}
